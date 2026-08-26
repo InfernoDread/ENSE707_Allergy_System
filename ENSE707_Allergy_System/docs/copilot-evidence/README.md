@@ -1,0 +1,1 @@
+This folder will contain documented evidence of GitHub Copilot use as we develop our Allergy System software and quality assurance tests.

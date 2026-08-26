@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="AllergySystem.Tests/AllergySystem.Tests.csproj" Id="480bce18-03d0-467f-9d27-02d6536ada35" />
+  <Project Path="AllergySystem/AllergySystem.csproj" Id="0c5964aa-a987-4ac5-819c-7e6f22fae9a3" />
+</Solution>
