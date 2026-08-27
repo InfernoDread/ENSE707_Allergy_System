@@ -11,6 +11,7 @@ namespace AllergySystem.Tests
     public class AllergyValidationServiceTests
     {
         [TestMethod]
+        //
         public void FindConflicts_MatchingAllergen_ReturnsConflict()
         {
             // Arrange
@@ -183,6 +184,30 @@ namespace AllergySystem.Tests
 
             // Assert
             Assert.HasCount(0, conflicts);
+        }
+
+        [TestMethod]
+        public void FindConflicts_NullMenuItem_ThrowsArgumentNullException()
+        {
+            // Arrange
+            var service = new AllergyValidationService();
+            var customerAllergens = new List<Allergen>();
+
+            // Act & Assert
+            Assert.ThrowsExactly<ArgumentNullException>(
+                () => service.FindConflicts(null!, customerAllergens));
+        }
+
+        [TestMethod]
+        public void FindConflicts_NullCustomerAllergens_ThrowsArgumentNullException()
+        {
+            // Arrange
+            var service = new AllergyValidationService();
+            var menuItem = new MenuItem();
+
+            // Act & Assert
+            Assert.ThrowsExactly<ArgumentNullException>(
+                () => service.FindConflicts(menuItem, null!));
         }
     }
 }

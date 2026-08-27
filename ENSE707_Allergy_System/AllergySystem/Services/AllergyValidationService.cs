@@ -6,6 +6,9 @@ namespace AllergySystem.Services
     {
         public List<Allergen> FindConflicts(MenuItem menuItem, List<Allergen> customerAllergens)
         {
+            ArgumentNullException.ThrowIfNull(menuItem);
+            ArgumentNullException.ThrowIfNull(customerAllergens);
+
             var conflicts = new List<Allergen>();
             foreach (var ingredient in menuItem.Ingredients)
             {
