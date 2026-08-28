@@ -27,7 +27,7 @@
                 {
                     var isChecked = Model.SelectedAllergenIds.Contains(allergen.Id);
 
-                    <label>
+                    <label class="allergen-option">
                         <input type="checkbox" name="SelectedAllergenIds" value="@allergen.Id" checked="@isChecked" />
                         <span>@allergen.Name</span>
                     </label>

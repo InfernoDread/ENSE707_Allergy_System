@@ -11,11 +11,13 @@ namespace AllergySystem.Pages.Customer
 
         private readonly InMemoryAllergyProfileStore _profileStore;
         private readonly AllergenCatalogService _catalogService;
+        private readonly AllergyProfileService _profileService;
 
-        public AllergyProfileModel(InMemoryAllergyProfileStore profileStore, AllergenCatalogService catalogService)
+        public AllergyProfileModel(InMemoryAllergyProfileStore profileStore, AllergenCatalogService catalogService, AllergyProfileService profileService)
         {
             _profileStore = profileStore;
             _catalogService = catalogService;
+            _profileService = profileService;
         }
 
         public List<Allergen> AvailableAllergens { get; private set; } = new();
@@ -38,7 +40,7 @@ namespace AllergySystem.Pages.Customer
             var selectedAllergens = AvailableAllergens.Where(a => SelectedAllergenIds.Contains(a.Id)).ToList();
             var profile = _profileStore.GetProfile(DemoCustomerId);
 
-            profile.Allergens = selectedAllergens;
+            _profileService.UpdateProfile(profile, selectedAllergens);
             _profileStore.SaveProfile(profile);
 
             SuccessMessage = "Allergy profile saved successfully!";
