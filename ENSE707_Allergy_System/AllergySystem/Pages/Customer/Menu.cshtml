@@ -1,0 +1,81 @@
+﻿@page
+@model AllergySystem.Pages.Customer.MenuModel
+
+@{
+    ViewData["Title"] = "Menu";
+}
+
+<div class="container mt-4">
+    <h1>Menu</h1>
+
+    <p class="text-muted">
+        Select a menu item to check it against your saved allergy profile.
+    </p>
+
+    <form method="post">
+        <div class="row">
+            @foreach (var item in Model.MenuItems)
+            {
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@item.Name</h5>
+
+                            <p class="card-text">
+                                @item.Description
+                            </p>
+
+                            <p>
+                                <strong>Ingredients:</strong>
+                                @string.Join(", ", item.Ingredients.Select(i => i.Name))
+                            </p>
+
+                            <button type="submit"
+                                    name="SelectedMenuItemId"
+                                    value="@item.Id"
+                                    class="btn btn-primary">
+                                Check for Allergy Conflicts
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </form>
+
+    @if (Model.SelectedMenuItem != null)
+    {
+        <div class="mt-4">
+            @if (Model.Conflicts.Count > 0)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">Allergy Warning</h4>
+
+                    <p>
+                        <strong>@Model.SelectedMenuItem.Name</strong>
+                        conflicts with your allergy profile.
+                    </p>
+
+                    <p class="mb-0">
+                        Conflicting allergens:
+                        <strong>
+                            @string.Join(", ", Model.Conflicts.Select(a => a.Name))
+                        </strong>
+                    </p>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-success" role="alert">
+                    <h4 class="alert-heading">No Allergy Conflicts Found</h4>
+
+                    <p class="mb-0">
+                        No conflicts were found between
+                        <strong>@Model.SelectedMenuItem.Name</strong>
+                        and your saved allergy profile.
+                    </p>
+                </div>
+            }
+        </div>
+    }
+</div>

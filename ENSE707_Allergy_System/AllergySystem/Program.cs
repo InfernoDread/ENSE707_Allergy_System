@@ -7,6 +7,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddSingleton<InMemoryAllergyProfileStore>();
 builder.Services.AddSingleton<AllergenCatalogService>();
 builder.Services.AddSingleton<AllergyProfileService>();
+builder.Services.AddSingleton<MenuCatalogService>();
+builder.Services.AddSingleton<AllergyValidationService>();
 
 var app = builder.Build();
 
