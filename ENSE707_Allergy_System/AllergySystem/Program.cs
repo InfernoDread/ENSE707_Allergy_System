@@ -1,7 +1,11 @@
+using AllergySystem.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddSingleton<InMemoryAllergyProfileStore>();
+builder.Services.AddSingleton<AllergenCatalogService>();
 
 var app = builder.Build();
 

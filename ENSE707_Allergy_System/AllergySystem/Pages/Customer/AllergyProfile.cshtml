@@ -1,0 +1,52 @@
+@page
+@model AllergySystem.Pages.Customer.AllergyProfileModel
+@{
+    ViewData["Title"] = "My Allergy Profile";
+}
+
+<div class="allergy-profile-page">
+    <h1>My Allergy Profile</h1>
+
+    <p>
+        Select any food allergies that apply to you.
+        These selections will be used when validating menu items.
+    </p>
+
+    @if(!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+    {
+        <div class="alert alert-success" role="status">
+            @Model.SuccessMessage
+        </div>
+    }
+
+    <form method="post">
+        <fieldset>
+            <legend>Select Your Allergies:</legend>
+            <div class="allergen-grid">
+                @foreach (var allergen in Model.AvailableAllergens)
+                {
+                    var isChecked = Model.SelectedAllergenIds.Contains(allergen.Id);
+
+                    <label>
+                        <input type="checkbox" name="SelectedAllergenIds" value="@allergen.Id" checked="@isChecked" />
+                        <span>@allergen.Name</span>
+                    </label>
+                }
+            </div>
+        </fieldset>
+        <button type="submit" class="btn btn-primary mt-3">Save Profile</button>
+    </form>
+
+    <hr />
+
+    <section class="recommended-allergen-placeholder">
+        <h2>Can't find your Allergens?</h2>
+
+        <p>
+            Recommendation and administrator approval will be added in a later milestone.
+        </p>
+        <button type="button" class="btn btn-outline-secondary" disabled>
+            Recommend an additional allergen
+        </button>
+    </section>
+</div>
