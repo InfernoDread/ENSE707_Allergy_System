@@ -1,0 +1,63 @@
+@page
+@model AllergySystem.Pages.Admin.AllergenRecommendationsModel
+@{
+    ViewData["Title"] = "Allergen Recommendations";
+}
+
+<div class="admin-recommendations-page">
+    <h1>Pending Allergen Recommendations</h1>
+
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="admin-status-message" role="status">
+            @Model.StatusMessage
+        </div>
+    }
+
+    @if (Model.PendingRecommendations.Count == 0)
+    {
+        <div class="admin-empty-state">
+            There are no pending allergen recommendations.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped admin-recommendations-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Suggested Allergen</th>
+                        <th>Customer ID</th>
+                        <th>Submitted</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var recommendation in Model.PendingRecommendations)
+                    {
+                        <tr>
+                            <td>@recommendation.Id</td>
+                            <td>@recommendation.SuggestedName</td>
+                            <td>@recommendation.CustomerId</td>
+                            <td>@recommendation.SubmittedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <div class="admin-action-group">
+                                    <form method="post" asp-page-handler="Approve">
+                                        <input type="hidden" name="recommendationId" value="@recommendation.Id" />
+                                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                    </form>
+
+                                    <form method="post" asp-page-handler="Reject">
+                                        <input type="hidden" name="recommendationId" value="@recommendation.Id" />
+                                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

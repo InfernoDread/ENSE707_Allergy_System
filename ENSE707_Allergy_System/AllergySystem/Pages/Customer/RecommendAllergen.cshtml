@@ -1,0 +1,45 @@
+@page
+@model AllergySystem.Pages.Customer.RecommendAllergenModel
+@{
+    ViewData["Title"] = "Recommend an Allergen";
+}
+
+<div class="recommend-allergen-page">
+    <div class="recommend-allergen-card">
+        <h1>Recommend an Allergen</h1>
+
+        <p class="lead">
+            If an allergen is missing from the catalog, you can suggest it here.
+            The recommendation will be reviewed before it is added to the system.
+        </p>
+
+        @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+        {
+            <div class="alert @(Model.IsSuccessStatus ? "alert-success" : "alert-warning")" role="status">
+                @Model.StatusMessage
+            </div>
+        }
+
+        <form method="post" class="recommend-allergen-form">
+            <div class="mb-3">
+                <label asp-for="RequestedAllergenName" class="form-label">Allergen name</label>
+                <input asp-for="RequestedAllergenName" class="form-control" placeholder="e.g. Gluten" />
+                <span asp-validation-for="RequestedAllergenName" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit Recommendation</button>
+        </form>
+
+        <hr />
+
+        <section class="recommend-allergen-list-section">
+            <h2>Current allergen list</h2>
+            <ul class="recommend-allergen-list">
+                @foreach (var allergen in Model.Allergens)
+                {
+                    <li>@allergen.Name</li>
+                }
+            </ul>
+        </section>
+    </div>
+</div>

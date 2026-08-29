@@ -9,6 +9,7 @@ builder.Services.AddSingleton<AllergenCatalogService>();
 builder.Services.AddSingleton<AllergyProfileService>();
 builder.Services.AddSingleton<MenuCatalogService>();
 builder.Services.AddSingleton<AllergyValidationService>();
+builder.Services.AddSingleton<AllergenRecommendationService>();
 
 var app = builder.Build();
 
