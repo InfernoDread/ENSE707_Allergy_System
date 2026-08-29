@@ -7,10 +7,16 @@ namespace AllergySystem.Tests
     [TestClass]
     public class AllergenRecommendationServiceTests
     {
+        private static AllergenRecommendationService CreateService()
+        {
+            var catalogService = new AllergenCatalogService();
+            return new AllergenRecommendationService(catalogService);
+        }
+
         [TestMethod]
         public void SubmitRecommendation_ValidInput_CreatesPendingRecommendation()
         {
-            var service = new AllergenRecommendationService();
+            var service = CreateService();
 
             var recommendation = service.SubmitRecommendation(42, "Gluten");
 
@@ -25,7 +31,7 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void SubmitRecommendation_BlankName_ThrowsArgumentException()
         {
-            var service = new AllergenRecommendationService();
+            var service = CreateService();
 
             Assert.ThrowsExactly<ArgumentException>(() => service.SubmitRecommendation(42, "   "));
         }
@@ -33,9 +39,9 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void GetPendingRecommendations_ReturnsOnlyPendingRecommendations()
         {
-            var service = new AllergenRecommendationService();
+            var service = CreateService();
             service.SubmitRecommendation(1, "Coconut");
-            var approved = service.SubmitRecommendation(2, "Sesame");
+            var approved = service.SubmitRecommendation(2, "Mustard");
             service.ApproveRecommendation(approved.Id);
 
             var pending = service.GetPendingRecommendations();
@@ -47,7 +53,7 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void ApproveRecommendation_ValidPending_ChangesStatusToApproved()
         {
-            var service = new AllergenRecommendationService();
+            var service = CreateService();
             var recommendation = service.SubmitRecommendation(1, "Coconut");
 
             var result = service.ApproveRecommendation(recommendation.Id);
@@ -59,7 +65,7 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void ApproveRecommendation_AlreadyApproved_ThrowsInvalidOperationException()
         {
-            var service = new AllergenRecommendationService();
+            var service = CreateService();
             var recommendation = service.SubmitRecommendation(1, "Coconut");
             service.ApproveRecommendation(recommendation.Id);
 
@@ -69,7 +75,7 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void RejectRecommendation_ValidPending_ChangesStatusToRejected()
         {
-            var service = new AllergenRecommendationService();
+            var service = CreateService();
             var recommendation = service.SubmitRecommendation(1, "Coconut");
 
             var result = service.RejectRecommendation(recommendation.Id);
@@ -81,7 +87,7 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void GetCustomerRecommendations_ReturnsOnlySpecifiedCustomer()
         {
-            var service = new AllergenRecommendationService();
+            var service = CreateService();
             service.SubmitRecommendation(1, "Coconut");
             service.SubmitRecommendation(2, "Blue Cheese");
             service.SubmitRecommendation(2, "Molluscs");
@@ -95,7 +101,7 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void SubmitRecommendation_DuplicatePendingName_ThrowsInvalidOperationException()
         {
-            var service = new AllergenRecommendationService();
+            var service = CreateService();
             service.SubmitRecommendation(1, "Gluten");
 
             Assert.ThrowsExactly<InvalidOperationException>(() => service.SubmitRecommendation(2, "gluten"));
@@ -104,19 +110,53 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void SubmitRecommendation_AlreadyResolvedName_ThrowsInvalidOperationException()
         {
-            var service = new AllergenRecommendationService();
-            var recommendation = service.SubmitRecommendation(1, "Sesame");
+            var service = CreateService();
+            var recommendation = service.SubmitRecommendation(1, "Celery");
             service.ApproveRecommendation(recommendation.Id);
 
-            Assert.ThrowsExactly<InvalidOperationException>(() => service.SubmitRecommendation(2, " sesame "));
+            Assert.ThrowsExactly<InvalidOperationException>(() => service.SubmitRecommendation(2, " Celery "));
         }
 
         [TestMethod]
         public void ApproveRecommendation_InvalidId_ThrowsArgumentException()
         {
-            var service = new AllergenRecommendationService();
+            var service = CreateService();
 
             Assert.ThrowsExactly<ArgumentException>(() => service.ApproveRecommendation(999));
         }
+
+        [TestMethod]
+        public void SubmitRecommendation_ExistingApprovedAllergen_ThrowsInvalidOperationException()
+        {
+            // Arrange
+            var catalogService = new AllergenCatalogService();
+            var service = new AllergenRecommendationService(catalogService);
+
+            // Act & Assert
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => service.SubmitRecommendation(1, "Peanuts"));
+        }
+
+        [TestMethod]
+        public void ApproveRecommendation_AddsAllergenToCatalog()
+        {
+            // Arrange
+            var catalogService = new AllergenCatalogService();
+            var service = new AllergenRecommendationService(catalogService);
+
+            var recommendation =
+                service.SubmitRecommendation(1, "Mustard");
+
+            // Act
+            service.ApproveRecommendation(recommendation.Id);
+
+            // Assert
+            var allergens = catalogService.GetAllergens();
+
+            Assert.Contains(
+                "Mustard",
+                allergens.Select(a => a.Name).ToList());
+        }
+
     }
 }

@@ -6,7 +6,12 @@ namespace AllergySystem.Services
     {
         private readonly Dictionary<int, AllergenRecommendation> _recommendations = new();
         private int _nextId = 1;
+        private readonly AllergenCatalogService _catalogService;
 
+        public AllergenRecommendationService(AllergenCatalogService catalogService)
+        {
+            _catalogService = catalogService;
+        }
         public AllergenRecommendation SubmitRecommendation(int customerId, string suggestedName)
         {
             if (customerId <= 0)
@@ -19,6 +24,9 @@ namespace AllergySystem.Services
 
             if (trimmedName.Length == 0)
                 throw new ArgumentException("Allergen name is required.", nameof(suggestedName));
+            
+            if (_catalogService.ContainsAllergen(trimmedName))
+                throw new InvalidOperationException($"\"{trimmedName}\" is already in the approved allergen catalogue.");
 
             if (HasExistingRecommendation(trimmedName))
                 throw new InvalidOperationException($"A recommendation for \"{trimmedName}\" already exists or has already been processed.");
@@ -49,10 +57,12 @@ namespace AllergySystem.Services
             var recommendation = GetRecommendationById(recommendationId);
 
             if (recommendation == null)
-                throw new ArgumentException("Recommendation ID is invalid.", nameof(recommendationId));
+                throw new ArgumentException("Recommendation ID is invalid.",nameof(recommendationId));
 
-            if (!recommendation.Status.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+            if (!recommendation.Status.Equals("Pending",StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Only a Pending recommendation can be approved.");
+
+            _catalogService.AddAllergen(recommendation.SuggestedName);
 
             recommendation.Status = "Approved";
             return true;
