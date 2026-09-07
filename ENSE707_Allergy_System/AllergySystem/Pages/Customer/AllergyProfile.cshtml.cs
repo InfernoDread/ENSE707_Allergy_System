@@ -5,14 +5,18 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AllergySystem.Pages.Customer
 {
+    // This code handles the customer allergy profile page.
+    // It loads approved allergens, displays the customer's current selections, and saves any changes made to the allergy profile.
     public class AllergyProfileModel : PageModel
     {
+        // Temporary customer ID used while the prototype has no authentication system.
         private const int DemoCustomerId = 1; 
 
         private readonly InMemoryAllergyProfileStore _profileStore;
         private readonly AllergenCatalogService _catalogService;
         private readonly AllergyProfileService _profileService;
 
+        // Creates the page model with the services required to load and update allergy profiles.
         public AllergyProfileModel(InMemoryAllergyProfileStore profileStore, AllergenCatalogService catalogService, AllergyProfileService profileService)
         {
             _profileStore = profileStore;
@@ -28,11 +32,13 @@ namespace AllergySystem.Pages.Customer
         [TempData]
         public string? SuccessMessage { get; set; }
 
+        // Loads the customer's current allergy profile when the page is opened.
         public void OnGet()
         {
             LoadPageData();
         }
 
+        // Saves the customer's selected allergens and redirects back to the page.
         public IActionResult OnPost()
         {
             AvailableAllergens = _catalogService.GetAllergens();
@@ -47,6 +53,7 @@ namespace AllergySystem.Pages.Customer
             return RedirectToPage();
         }
 
+        // Loads the approved allergen catalogue and the customer's saved selections.
         private void LoadPageData()
         {
             AvailableAllergens = _catalogService.GetAllergens();

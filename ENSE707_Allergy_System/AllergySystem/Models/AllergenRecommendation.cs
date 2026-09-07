@@ -1,3 +1,5 @@
+// This class represents an allergen recommendation submitted by a customer.
+// It stores the suggested allergen name, its review status, and submission details.
 public class AllergenRecommendation
 {
     public int Id { get; set; }

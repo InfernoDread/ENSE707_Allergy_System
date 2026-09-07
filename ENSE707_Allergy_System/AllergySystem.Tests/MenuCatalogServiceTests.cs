@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace AllergySystem.Tests
 {
+    // These tests verify the menu catalogue structure, including menu item counts, ingredient allergen assignments, and unique menu and ingredient IDs.
     [TestClass]
     public class MenuCatalogServiceTests
     {

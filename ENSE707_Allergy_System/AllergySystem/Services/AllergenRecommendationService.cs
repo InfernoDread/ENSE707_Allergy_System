@@ -2,16 +2,21 @@ using AllergySystem.Models;
 
 namespace AllergySystem.Services
 {
+    // This Service manages customer allergen recommendations and their approval workflow.
+    // It handles submission, review status changes, and adding approved allergens to the catalogue.
     public class AllergenRecommendationService
     {
         private readonly Dictionary<int, AllergenRecommendation> _recommendations = new();
         private int _nextId = 1;
         private readonly AllergenCatalogService _catalogService;
 
+        // Creates the service using the approved allergen catalogue.
         public AllergenRecommendationService(AllergenCatalogService catalogService)
         {
             _catalogService = catalogService;
         }
+
+        // Submits a new allergen recommendation after validating the customer ID, allergen name, and checking for existing allergens or recommendations.
         public AllergenRecommendation SubmitRecommendation(int customerId, string suggestedName)
         {
             if (customerId <= 0)
@@ -44,6 +49,7 @@ namespace AllergySystem.Services
             return recommendation;
         }
 
+        // Returns all recommendations that are currently waiting for administrator review.
         public List<AllergenRecommendation> GetPendingRecommendations()
         {
             return _recommendations.Values
@@ -52,6 +58,7 @@ namespace AllergySystem.Services
                 .ToList();
         }
 
+        // Approves a pending recommendation and adds the allergen to the approved allergen catalogue.
         public bool ApproveRecommendation(int recommendationId)
         {
             var recommendation = GetRecommendationById(recommendationId);
@@ -59,7 +66,7 @@ namespace AllergySystem.Services
             if (recommendation == null)
                 throw new ArgumentException("Recommendation ID is invalid.",nameof(recommendationId));
 
-            if (!recommendation.Status.Equals("Pending",StringComparison.OrdinalIgnoreCase))
+            if (!recommendation.Status.Equals("Pending", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Only a Pending recommendation can be approved.");
 
             _catalogService.AddAllergen(recommendation.SuggestedName);
@@ -68,6 +75,7 @@ namespace AllergySystem.Services
             return true;
         }
 
+        // Rejects a pending recommendation without adding it to the approved allergen catalogue.
         public bool RejectRecommendation(int recommendationId)
         {
             var recommendation = GetRecommendationById(recommendationId);
@@ -82,6 +90,7 @@ namespace AllergySystem.Services
             return true;
         }
 
+        // Returns all allergen recommendations submitted by a specific customer.
         public List<AllergenRecommendation> GetCustomerRecommendations(int customerId)
         {
             if (customerId <= 0)
@@ -93,6 +102,7 @@ namespace AllergySystem.Services
                 .ToList();
         }
 
+        // Finds a recommendation by its unique ID and returns null when no matching recommendation exists.
         public AllergenRecommendation? GetRecommendationById(int recommendationId)
         {
             if (recommendationId <= 0)
@@ -103,6 +113,7 @@ namespace AllergySystem.Services
                 : null;
         }
 
+        // Checks whether a recommendation with the same allergen name has already been submitted.
         private bool HasExistingRecommendation(string allergenName)
         {
             return _recommendations.Values.Any(r =>

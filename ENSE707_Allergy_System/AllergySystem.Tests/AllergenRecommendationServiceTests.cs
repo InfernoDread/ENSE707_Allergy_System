@@ -4,9 +4,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AllergySystem.Tests
 {
+    // These tests verify the allergen recommendation workflow, including submission, duplicate prevention, approval, rejection, and catalogue updates.
     [TestClass]
     public class AllergenRecommendationServiceTests
     {
+        // Creates a fresh recommendation service with a new allergen catalogue for each test.
         private static AllergenRecommendationService CreateService()
         {
             var catalogService = new AllergenCatalogService();

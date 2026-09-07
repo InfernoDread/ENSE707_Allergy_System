@@ -2,15 +2,20 @@
 
 namespace AllergySystem.Services
 {
+    // This service provides the restaurant's current menu catalogue.
+    // Menu items are built from ingredients, with allergens attached to the relevant ingredients.
     public class MenuCatalogService
     {
         private readonly AllergenCatalogService _allergenCatalogService;
 
+        // Uses the approved allergen catalogue when assigning allergens to menu ingredients.
         public MenuCatalogService(AllergenCatalogService allergenCatalogService)
         {
             _allergenCatalogService = allergenCatalogService;
         }
 
+        // Returns the available menu items and their ingredients.
+        // Allergen information is assigned at the ingredient level using the approved catalogue.
         public List<MenuItem> GetMenuItems()
         {
             var allergens = _allergenCatalogService.GetAllergens().ToDictionary(a => a.Id);

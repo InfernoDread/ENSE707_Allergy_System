@@ -5,6 +5,7 @@ using System.Text;
 
 namespace AllergySystem.Tests
 {
+    // These tests verify the behaviour of the allergen catalogue service, including the predefined allergen list and unique allergen IDs.
     [TestClass]
     public class AllergenCatalogServiceTests
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace AllergySystem.Models
 {
-    // Minimal Order model for prototype: single MenuItem per order
+    // Defines the possible status values an order can have during the ordering process.
     public enum OrderStatus
     {
         Pending,
@@ -13,6 +13,8 @@ namespace AllergySystem.Models
         Cancelled
     }
 
+    // This class represents a customer order in the allergy system.
+    // It stores the selected menu item, order status, creation time, and any conflicting allergens.
     public class Order
     {
         public int Id { get; set; }

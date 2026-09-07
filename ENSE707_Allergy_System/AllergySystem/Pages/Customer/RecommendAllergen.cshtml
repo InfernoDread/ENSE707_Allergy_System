@@ -13,6 +13,7 @@
             The recommendation will be reviewed before it is added to the system.
         </p>
 
+        <!-- Displays feedback after the customer submits an allergen recommendation. -->
         @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
         {
             <div class="alert @(Model.IsSuccessStatus ? "alert-success" : "alert-warning")" role="status">
@@ -20,6 +21,7 @@
             </div>
         }
 
+        <!-- Allows the customer to submit the name of an allergen that is not currently listed. -->
         <form method="post" class="recommend-allergen-form">
             <div class="mb-3">
                 <label asp-for="RequestedAllergenName" class="form-label">Allergen name</label>
@@ -32,6 +34,7 @@
 
         <hr />
 
+        <!-- Displays the current approved allergen catalogue for customer reference. -->
         <section class="recommend-allergen-list-section">
             <h2>Current allergen list</h2>
             <ul class="recommend-allergen-list">

@@ -1,7 +1,7 @@
 ﻿namespace AllergySystem.Models
 {
     // This class represents an allergen in the allergy system
-    // It contains the allergen's ID and name.
+    // It stores the allergen's unique ID and display name.
     public class Allergen
     {
         public int Id { get; set; }

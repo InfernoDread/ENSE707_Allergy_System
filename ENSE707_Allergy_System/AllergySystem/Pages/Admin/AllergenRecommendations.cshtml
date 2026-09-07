@@ -7,6 +7,7 @@
 <div class="admin-recommendations-page">
     <h1>Pending Allergen Recommendations</h1>
 
+    <!-- Displays feedback after an administrator approves or rejects a recommendation. -->
     @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
     {
         <div class="admin-status-message" role="status">
@@ -14,6 +15,7 @@
         </div>
     }
 
+    <!-- Shows an empty-state message when there are no recommendations waiting for review. -->
     @if (Model.PendingRecommendations.Count == 0)
     {
         <div class="admin-empty-state">
@@ -22,6 +24,7 @@
     }
     else
     {
+        <!-- Displays all pending recommendations and provides approval and rejection actions. -->
         <div class="table-responsive">
             <table class="table table-striped admin-recommendations-table">
                 <thead>

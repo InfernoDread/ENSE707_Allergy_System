@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AllergySystem.Tests
 {
+    // These tests verify allergy profile updates, including valid selections, duplicate removal, replacement behaviour, and null input handling.
     [TestClass]
     public class AllergyProfileServiceTests
     {

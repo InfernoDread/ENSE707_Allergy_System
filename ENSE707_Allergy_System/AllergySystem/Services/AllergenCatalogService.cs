@@ -2,6 +2,8 @@
 
 namespace AllergySystem.Services
 {
+    // This service manages the system's approved allergen catalogue.
+    // It provides access to existing allergens and allows new approved allergens to be added.
     public class AllergenCatalogService
     {
         private readonly List<Allergen> _allergens = new()
@@ -17,11 +19,13 @@ namespace AllergySystem.Services
             new Allergen { Id = 9, Name = "Sesame" }
         };
 
+        // Returns a copy of the current approved allergen catalogue.
         public List<Allergen> GetAllergens()
         {
             return _allergens.ToList();
         }
 
+        // Adds a new allergen to the approved catalogue after validating the name and checking that the allergen does not already exist.
         public Allergen AddAllergen(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -46,6 +50,7 @@ namespace AllergySystem.Services
             return allergen;
         }
 
+        // Checks whether an allergen with the given name already exists in the approved catalogue.
         public bool ContainsAllergen(string name)
         {
             if (string.IsNullOrWhiteSpace(name))

@@ -4,6 +4,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+// Register application services as singletons so in-memory data remains available for the lifetime of the running application.
 builder.Services.AddSingleton<InMemoryAllergyProfileStore>();
 builder.Services.AddSingleton<AllergenCatalogService>();
 builder.Services.AddSingleton<AllergyProfileService>();

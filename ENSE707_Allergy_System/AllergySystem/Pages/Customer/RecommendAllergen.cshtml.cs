@@ -5,13 +5,17 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace AllergySystem.Pages.Customer
 {
+    // This code handles the customer allergen recommendation page.
+    // It displays the approved allergen catalogue and allows customers to submit new allergen recommendations.
     public class RecommendAllergenModel : PageModel
     {
+        // Temporary customer ID used while the prototype has no authentication system.
         private const int DemoCustomerId = 1;
 
         private readonly AllergenCatalogService _catalogService;
         private readonly AllergenRecommendationService _recommendationService;
 
+        // Creates the page model with the services needed to display allergens and submit new customer recommendations.
         public RecommendAllergenModel(AllergenCatalogService catalogService, AllergenRecommendationService recommendationService)
         {
             _catalogService = catalogService;
@@ -28,12 +32,14 @@ namespace AllergySystem.Pages.Customer
 
         public bool IsSuccessStatus { get; private set; }
 
+        // Loads the approved allergen catalogue when the page is opened.
         public void OnGet()
         {
             LoadPageData();
             IsSuccessStatus = false;
         }
 
+        // Validates and submits a new allergen recommendation, then displays an appropriate status message for successful or invalid submissions.
         public IActionResult OnPost()
         {
             LoadPageData();
@@ -71,6 +77,7 @@ namespace AllergySystem.Pages.Customer
             return Page();
         }
 
+        // Loads the current approved allergen catalogue for display and validation.
         private void LoadPageData()
         {
             Allergens = _catalogService.GetAllergens();

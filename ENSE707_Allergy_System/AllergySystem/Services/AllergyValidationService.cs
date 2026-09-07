@@ -2,8 +2,10 @@
 
 namespace AllergySystem.Services
 {
+    // This Service checks menu items against a customer's allergy profile to identify any allergens that may cause a conflict.
     public class AllergyValidationService
     {
+        // Checks menu items against a customer's allergy profile to identify any allergens that may cause a conflict.
         public List<Allergen> FindConflicts(MenuItem menuItem, List<Allergen> customerAllergens)
         {
             ArgumentNullException.ThrowIfNull(menuItem);

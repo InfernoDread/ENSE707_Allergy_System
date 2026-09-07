@@ -12,13 +12,15 @@
         These selections will be used when validating menu items.
     </p>
 
-    @if(!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+    <!-- Displays confirmation after the customer's allergy profile is successfully saved. -->
+    @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
     {
         <div class="alert alert-success" role="status">
             @Model.SuccessMessage
         </div>
     }
 
+    <!-- Displays the approved allergen catalogue and allows the customer to save their selections. -->
     <form method="post">
         <fieldset>
             <legend>Select Your Allergies:</legend>
@@ -39,6 +41,7 @@
 
     <hr />
 
+    <!-- Provides access to the allergen recommendation workflow when an allergen is not listed. -->
     <section class="recommended-allergen">
         <h2>Can't find your allergen?</h2>
 

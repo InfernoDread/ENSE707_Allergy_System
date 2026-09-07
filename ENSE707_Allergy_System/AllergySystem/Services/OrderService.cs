@@ -4,7 +4,8 @@ using AllergySystem.Models;
 
 namespace AllergySystem.Services
 {
-    // Minimal OrderService coordinating creation and status updates
+    // This service Coordinates customer order creation and order status updates.
+    // /It uses menu, allergy profile, and validation services to determine whether an order has allergen conflicts.
     public class OrderService
     {
         private readonly InMemoryOrderStore _orderStore;
@@ -12,6 +13,7 @@ namespace AllergySystem.Services
         private readonly InMemoryAllergyProfileStore _profileStore;
         private readonly AllergyValidationService _validationService;
 
+        // Creates the service with the stores and services needed to process customer orders.
         public OrderService(
             InMemoryOrderStore orderStore,
             MenuCatalogService menuCatalog,
@@ -24,9 +26,11 @@ namespace AllergySystem.Services
             _validationService = validationService;
         }
 
+        // Creates a new order for a selected menu item and checks it against the customer's allergy profile before assigning the initial order status.
         public Order CreateOrder(int customerId, int menuItemId)
         {
             var menuItem = _menuCatalog.GetMenuItems().FirstOrDefault(m => m.Id == menuItemId);
+
             if (menuItem == null)
                 throw new ArgumentException($"Menu item {menuItemId} not found", nameof(menuItemId));
 
@@ -46,11 +50,12 @@ namespace AllergySystem.Services
             return _orderStore.SaveOrder(order);
         }
 
+        // Updates an order's status while preventing orders with unresolved allergen conflicts from progressing to an unsafe status.
         public void UpdateOrderStatus(int orderId, OrderStatus newStatus)
         {
             var order = _orderStore.GetOrder(orderId) ?? throw new ArgumentException("Order not found", nameof(orderId));
 
-            // Enforce stricter rule: if there are confirmed conflicts, order may only remain PendingAllergyConfirmation or be Cancelled
+            // Orders with allergen conflicts can only remain awaiting confirmation or be cancelled until the conflict has been resolved.
             if (order.ConflictingAllergens != null && order.ConflictingAllergens.Any())
             {
                 if (newStatus != OrderStatus.PendingAllergyConfirmation && newStatus != OrderStatus.Cancelled)

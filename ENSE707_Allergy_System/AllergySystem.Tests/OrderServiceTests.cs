@@ -7,6 +7,7 @@ using System.Collections.Generic;
 
 namespace AllergySystem.Tests
 {
+    // These tests verify order creation, allergen conflict handling, order persistence, and valid or blocked status transitions.
     [TestClass]
     public class OrderServiceTests
     {
@@ -56,11 +57,11 @@ namespace AllergySystem.Tests
 
             var customerId = 99;
             var profile = profileStore.GetProfile(customerId);
-            // Mark customer allergic to Peanuts (id 1)
-            profile.Allergens = new System.Collections.Generic.List<Allergen> { new Allergen { Id = 1, Name = "Peanuts" } };
+            // Customer is allergic to Peanuts (allergen ID 1).
+            profile.Allergens = new List<Allergen> { new Allergen { Id = 1, Name = "Peanuts" } };
             profileStore.SaveProfile(profile);
 
-            // Peanut Chicken Noodles has id 2 in menu catalog
+            // Peanut Chicken Noodles has menu item ID 2.
             var menuItem = menuCatalog.GetMenuItems().First(m => m.Id == 2);
 
             // Act
@@ -68,7 +69,7 @@ namespace AllergySystem.Tests
 
             // Assert
             Assert.AreEqual(OrderStatus.PendingAllergyConfirmation, created.Status);
-            CollectionAssert.AreEqual(new System.Collections.Generic.List<int> { 1 }, created.ConflictingAllergens.Select(a => a.Id).ToList());
+            CollectionAssert.AreEqual(new List<int> { 1 }, created.ConflictingAllergens.Select(a => a.Id).ToList());
 
             var persisted = orderStore.GetOrder(created.Id);
             Assert.IsNotNull(persisted);
@@ -89,7 +90,7 @@ namespace AllergySystem.Tests
 
             var customerId = 123;
             var profile = profileStore.GetProfile(customerId);
-            profile.Allergens = new System.Collections.Generic.List<Allergen> { new Allergen { Id = 1, Name = "Peanuts" } };
+            profile.Allergens = new List<Allergen> { new Allergen { Id = 1, Name = "Peanuts" } };
             profileStore.SaveProfile(profile);
 
             var menuItem = menuCatalog.GetMenuItems().First(m => m.Id == 2);

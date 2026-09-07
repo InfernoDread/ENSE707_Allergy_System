@@ -10,8 +10,8 @@ namespace AllergySystem.Tests
     [TestClass]
     public class AllergyValidationServiceTests
     {
+        // These tests verify allergen conflict detection between menu item ingredients and a customer's saved allergy profile.
         [TestMethod]
-        //
         public void FindConflicts_MatchingAllergen_ReturnsConflict()
         {
             // Arrange

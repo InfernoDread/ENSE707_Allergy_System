@@ -6,6 +6,8 @@ namespace AllergySystem.Pages
 {
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     [IgnoreAntiforgeryToken]
+
+    // Handles the error page and provides the current request ID for troubleshooting.
     public class ErrorModel : PageModel
     {
         public string? RequestId { get; set; }

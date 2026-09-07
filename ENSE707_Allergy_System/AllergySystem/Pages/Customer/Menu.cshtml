@@ -12,6 +12,7 @@
         Select a menu item to check it against your saved allergy profile.
     </p>
 
+    <!-- Displays the available menu items and allows the customer to select one for allergy checking. -->
     <form method="post">
         <div class="row">
             @foreach (var item in Model.MenuItems)
@@ -43,11 +44,13 @@
         </div>
     </form>
 
+    <!-- Displays the result of checking the selected menu item against the customer's allergy profile. -->
     @if (Model.SelectedMenuItem != null)
     {
         <div class="mt-4">
             @if (Model.Conflicts.Count > 0)
             {
+                <!-- Shows a warning when one or more conflicting allergens are detected. -->
                 <div class="alert alert-danger" role="alert">
                     <h4 class="alert-heading">Allergy Warning</h4>
 
@@ -66,6 +69,7 @@
             }
             else
             {
+                <!-- Confirms that no allergen conflicts were found for the selected menu item. -->
                 <div class="alert alert-success" role="alert">
                     <h4 class="alert-heading">No Allergy Conflicts Found</h4>
 
