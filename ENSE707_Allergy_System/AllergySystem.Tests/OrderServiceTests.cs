@@ -1,193 +1,286 @@
-using System;
-using System.Linq;
 using AllergySystem.Models;
 using AllergySystem.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
 
 namespace AllergySystem.Tests
 {
-    // These tests verify order creation, allergen conflict handling, order persistence, and valid or blocked status transitions.
+    // These tests verify cart-based order creation, persistence, allergy validation, cart clearing, and status transitions.
     [TestClass]
     public class OrderServiceTests
     {
-        [TestMethod]
-        public void CreateOrder_NoAllergyConflict_SetsStatusPendingAndPersists()
+        private static OrderService CreateService(
+            out InMemoryOrderStore orderStore,
+            out CartService cartService,
+            out InMemoryAllergyProfileStore profileStore)
         {
-            // Arrange
-            var orderStore = new InMemoryOrderStore();
+            orderStore = new InMemoryOrderStore();
+            var cartStore = new InMemoryCartStore();
+            profileStore = new InMemoryAllergyProfileStore();
+
             var allergenCatalog = new AllergenCatalogService();
             var menuCatalog = new MenuCatalogService(allergenCatalog);
-            var profileStore = new InMemoryAllergyProfileStore();
-            var validation = new AllergyValidationService();
-            var service = new OrderService(orderStore, menuCatalog, profileStore, validation);
+            var validationService = new AllergyValidationService();
 
-            var customerId = 42;
+            cartService = new CartService(
+                cartStore,
+                menuCatalog,
+                profileStore,
+                validationService);
+
+            return new OrderService(
+                orderStore,
+                cartService,
+                profileStore,
+                validationService);
+        }
+
+        [TestMethod]
+        public void CreateOrderFromCart_SafeItems_CreatesPendingOrderAndClearsCart()
+        {
+            // Arrange
+            var service = CreateService(
+                out var orderStore,
+                out var cartService,
+                out var profileStore);
+
+            var customerId = 1;
+
             var profile = profileStore.GetProfile(customerId);
             profile.Allergens.Clear();
             profileStore.SaveProfile(profile);
 
-            var menuItem = menuCatalog.GetMenuItems().First(m => m.Id == 5);
+            cartService.AddItem(customerId, 5);
+            cartService.AddItem(customerId, 5);
 
             // Act
-            var created = service.CreateOrder(customerId, menuItem.Id);
+            var created = service.CreateOrderFromCart(customerId);
 
             // Assert
             Assert.AreEqual(OrderStatus.Pending, created.Status);
             Assert.HasCount(0, created.ConflictingAllergens);
 
+            Assert.HasCount(1, created.Items);
+            Assert.AreEqual(5, created.Items[0].MenuItem.Id);
+            Assert.AreEqual(2, created.Items[0].Quantity);
+
             var persisted = orderStore.GetOrder(created.Id);
+
             Assert.IsNotNull(persisted);
             Assert.AreEqual(created.Id, persisted.Id);
-            Assert.AreEqual(created.CustomerId, persisted.CustomerId);
-            Assert.AreEqual(created.MenuItem.Id, persisted.MenuItem.Id);
-            Assert.AreEqual(created.Status, persisted.Status);
+            Assert.AreEqual(customerId, persisted.CustomerId);
+
+            var cart = cartService.GetCart(customerId);
+            Assert.HasCount(0, cart.Items);
         }
 
         [TestMethod]
-        public void CreateOrder_WithAllergyConflict_SetsStatusPendingAllergyConfirmationAndStoresConflict()
+        public void CreateOrderFromCart_MultipleSafeItems_CreatesSingleMultiItemOrder()
         {
             // Arrange
-            var orderStore = new InMemoryOrderStore();
-            var allergenCatalog = new AllergenCatalogService();
-            var menuCatalog = new MenuCatalogService(allergenCatalog);
-            var profileStore = new InMemoryAllergyProfileStore();
-            var validation = new AllergyValidationService();
-            var service = new OrderService(orderStore, menuCatalog, profileStore, validation);
+            var service = CreateService(
+                out _,
+                out var cartService,
+                out var profileStore);
 
-            var customerId = 99;
+            var customerId = 2;
+
             var profile = profileStore.GetProfile(customerId);
-            // Customer is allergic to Peanuts (allergen ID 1).
-            profile.Allergens = new List<Allergen> { new Allergen { Id = 1, Name = "Peanuts" } };
+            profile.Allergens.Clear();
             profileStore.SaveProfile(profile);
 
-            // Peanut Chicken Noodles has menu item ID 2.
-            var menuItem = menuCatalog.GetMenuItems().First(m => m.Id == 2);
+            cartService.AddItem(customerId, 1);
+            cartService.AddItem(customerId, 5);
 
             // Act
-            var created = service.CreateOrder(customerId, menuItem.Id);
+            var created = service.CreateOrderFromCart(customerId);
 
             // Assert
-            Assert.AreEqual(OrderStatus.PendingAllergyConfirmation, created.Status);
-            CollectionAssert.AreEqual(new List<int> { 1 }, created.ConflictingAllergens.Select(a => a.Id).ToList());
+            Assert.HasCount(2, created.Items);
 
-            var persisted = orderStore.GetOrder(created.Id);
-            Assert.IsNotNull(persisted);
-            Assert.AreEqual(created.Status, persisted.Status);
-            CollectionAssert.AreEqual(created.ConflictingAllergens.Select(a => a.Id).ToList(), persisted.ConflictingAllergens.Select(a => a.Id).ToList());
+            CollectionAssert.AreEquivalent(
+                new List<int> { 1, 5 },
+                created.Items
+                    .Select(i => i.MenuItem.Id)
+                    .ToList());
         }
 
         [TestMethod]
-        public void UpdateOrderStatus_WithConflict_CannotMoveToInPreparation()
+        public void CreateOrderFromCart_ProfileChangedAfterCartAddition_DetectsConflict()
         {
             // Arrange
-            var orderStore = new InMemoryOrderStore();
-            var allergenCatalog = new AllergenCatalogService();
-            var menuCatalog = new MenuCatalogService(allergenCatalog);
-            var profileStore = new InMemoryAllergyProfileStore();
-            var validation = new AllergyValidationService();
-            var service = new OrderService(orderStore, menuCatalog, profileStore, validation);
+            var service = CreateService(
+                out _,
+                out var cartService,
+                out var profileStore);
 
-            var customerId = 123;
+            var customerId = 3;
+
             var profile = profileStore.GetProfile(customerId);
-            profile.Allergens = new List<Allergen> { new Allergen { Id = 1, Name = "Peanuts" } };
+            profile.Allergens.Clear();
             profileStore.SaveProfile(profile);
 
-            var menuItem = menuCatalog.GetMenuItems().First(m => m.Id == 2);
-            var created = service.CreateOrder(customerId, menuItem.Id);
+            // Creamy Pasta is safe when the profile has no Milk allergy.
+            cartService.AddItem(customerId, 4);
+
+            // Customer updates their allergy profile after the item is already in the cart.
+            profile.Allergens = new List<Allergen>
+            {
+                new Allergen
+                {
+                    Id = 3,
+                    Name = "Milk"
+                }
+            };
+
+            profileStore.SaveProfile(profile);
+
+            // Act
+            var created = service.CreateOrderFromCart(customerId);
+
+            // Assert
+            Assert.AreEqual(
+                OrderStatus.PendingAllergyConfirmation,
+                created.Status);
+
+            Assert.Contains(
+                3,
+                created.ConflictingAllergens
+                    .Select(a => a.Id)
+                    .ToList());
+        }
+
+        [TestMethod]
+        public void CreateOrderFromCart_EmptyCart_ThrowsInvalidOperationException()
+        {
+            // Arrange
+            var service = CreateService(
+                out _,
+                out _,
+                out _);
 
             // Act & Assert
-            Assert.ThrowsExactly<InvalidOperationException>(() => service.UpdateOrderStatus(created.Id, OrderStatus.InPreparation));
-
-            var persisted = orderStore.GetOrder(created.Id);
-            Assert.IsNotNull(persisted);
-            Assert.AreEqual(OrderStatus.PendingAllergyConfirmation, persisted.Status);
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => service.CreateOrderFromCart(4));
         }
 
         [TestMethod]
         public void UpdateOrderStatus_NoConflict_AllowsTransitionToInPreparation()
         {
             // Arrange
-            var orderStore = new InMemoryOrderStore();
-            var allergenCatalog = new AllergenCatalogService();
-            var menuCatalog = new MenuCatalogService(allergenCatalog);
-            var profileStore = new InMemoryAllergyProfileStore();
-            var validation = new AllergyValidationService();
-            var service = new OrderService(orderStore, menuCatalog, profileStore, validation);
+            var service = CreateService(
+                out var orderStore,
+                out var cartService,
+                out var profileStore);
 
-            var customerId = 7;
+            var customerId = 5;
+
             var profile = profileStore.GetProfile(customerId);
             profile.Allergens.Clear();
             profileStore.SaveProfile(profile);
 
-            var menuItem = menuCatalog.GetMenuItems().First(m => m.Id == 1);
-            var created = service.CreateOrder(customerId, menuItem.Id);
+            cartService.AddItem(customerId, 5);
+
+            var created = service.CreateOrderFromCart(customerId);
 
             // Act
-            service.UpdateOrderStatus(created.Id, OrderStatus.InPreparation);
+            service.UpdateOrderStatus(
+                created.Id,
+                OrderStatus.InPreparation);
 
             // Assert
             var persisted = orderStore.GetOrder(created.Id);
+
             Assert.IsNotNull(persisted);
-            Assert.AreEqual(OrderStatus.InPreparation, persisted.Status);
+            Assert.AreEqual(
+                OrderStatus.InPreparation,
+                persisted.Status);
         }
 
         [TestMethod]
-        public void CreateOrder_InvalidMenuItemId_ThrowsArgumentException()
+        public void UpdateOrderStatus_WithConflict_CannotMoveToInPreparation()
         {
             // Arrange
-            var orderStore = new InMemoryOrderStore();
-            var allergenCatalog = new AllergenCatalogService();
-            var menuCatalog = new MenuCatalogService(allergenCatalog);
-            var profileStore = new InMemoryAllergyProfileStore();
-            var validation = new AllergyValidationService();
-            var service = new OrderService(orderStore, menuCatalog, profileStore, validation);
+            var service = CreateService(
+                out var orderStore,
+                out var cartService,
+                out var profileStore);
 
-            var customerId = 50;
-            var invalidMenuItemId = 999;
+            var customerId = 6;
 
-            // Act & Assert
-            Assert.ThrowsExactly<ArgumentException>(
-                () => service.CreateOrder(customerId, invalidMenuItemId));
-        }
-
-        [TestMethod]
-        public void UpdateOrderStatus_WithConflict_CannotSkipDirectlyToCompleted()
-        {
-            // Arrange
-            var orderStore = new InMemoryOrderStore();
-            var allergenCatalog = new AllergenCatalogService();
-            var menuCatalog = new MenuCatalogService(allergenCatalog);
-            var profileStore = new InMemoryAllergyProfileStore();
-            var validation = new AllergyValidationService();
-            var service = new OrderService(orderStore, menuCatalog, profileStore, validation);
-
-            var customerId = 321;
             var profile = profileStore.GetProfile(customerId);
+            profile.Allergens.Clear();
+            profileStore.SaveProfile(profile);
+
+            cartService.AddItem(customerId, 4);
 
             profile.Allergens = new List<Allergen>
             {
-                new Allergen { Id = 1, Name = "Peanuts" }
+                new Allergen
+                {
+                    Id = 3,
+                    Name = "Milk"
+                }
             };
 
             profileStore.SaveProfile(profile);
 
-            var menuItem = menuCatalog.GetMenuItems()
-                .First(m => m.Id == 2);
-
-            var created = service.CreateOrder(customerId, menuItem.Id);
+            var created = service.CreateOrderFromCart(customerId);
 
             // Act & Assert
             Assert.ThrowsExactly<InvalidOperationException>(
                 () => service.UpdateOrderStatus(
                     created.Id,
-                    OrderStatus.Completed));
+                    OrderStatus.InPreparation));
 
             var persisted = orderStore.GetOrder(created.Id);
 
             Assert.IsNotNull(persisted);
             Assert.AreEqual(
                 OrderStatus.PendingAllergyConfirmation,
+                persisted.Status);
+        }
+
+        [TestMethod]
+        public void UpdateOrderStatus_WithConflict_AllowsCancellation()
+        {
+            // Arrange
+            var service = CreateService(
+                out var orderStore,
+                out var cartService,
+                out var profileStore);
+
+            var customerId = 7;
+
+            var profile = profileStore.GetProfile(customerId);
+            profile.Allergens.Clear();
+            profileStore.SaveProfile(profile);
+
+            cartService.AddItem(customerId, 4);
+
+            profile.Allergens = new List<Allergen>
+            {
+                new Allergen
+                {
+                    Id = 3,
+                    Name = "Milk"
+                }
+            };
+
+            profileStore.SaveProfile(profile);
+
+            var created = service.CreateOrderFromCart(customerId);
+
+            // Act
+            service.UpdateOrderStatus(
+                created.Id,
+                OrderStatus.Cancelled);
+
+            // Assert
+            var persisted = orderStore.GetOrder(created.Id);
+
+            Assert.IsNotNull(persisted);
+            Assert.AreEqual(
+                OrderStatus.Cancelled,
                 persisted.Status);
         }
     }

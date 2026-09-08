@@ -1,0 +1,172 @@
+﻿@page
+@model AllergySystem.Pages.Customer.CartModel
+
+@{
+    ViewData["Title"] = "Cart";
+}
+
+<div class="container mt-4">
+    <h1>Your Cart</h1>
+
+    <!-- Displays an empty-state message when the customer has no items in their cart. -->
+    @if (Model.Cart.Items.Count == 0)
+    {
+        <div class="alert alert-info mt-3">
+            Your cart is currently empty.
+        </div>
+
+        <a asp-page="/Customer/Menu"
+           class="btn btn-primary">
+            Return to Menu
+        </a>
+    }
+    else
+    {
+        <!-- Displays the total quantity of items currently stored in the cart. -->
+        <p class="text-muted">
+            You currently have
+            <strong>@Model.TotalItemCount</strong>
+            item(s) in your cart.
+        </p>
+
+        <!-- Displays each cart item, its quantity, ingredients, and removal option. -->
+        <div class="list-group mb-4">
+            @foreach (var item in Model.Cart.Items)
+            {
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">
+                                @item.MenuItem.Name
+                            </h5>
+
+                            <p class="mb-1">
+                                Quantity:
+                                <strong>@item.Quantity</strong>
+                            </p>
+
+                            <small class="text-muted">
+                                Ingredients:
+                                @string.Join(
+                                    ", ",
+                                    item.MenuItem.Ingredients.Select(i => i.Name))
+                            </small>
+                        </div>
+
+                        <!-- Allows the customer to remove the selected menu item from the cart. -->
+                        <form method="post"
+                              asp-page-handler="Remove">
+                            <input type="hidden"
+                                   name="menuItemId"
+                                   value="@item.MenuItem.Id" />
+
+                            <button type="submit"
+                                    class="btn btn-outline-danger">
+                                Remove
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Provides navigation back to the menu and allows the customer to submit the full cart as one order. -->
+        <div class="d-flex justify-content-between">
+            <a asp-page="/Customer/Menu"
+               class="btn btn-outline-primary">
+                Continue Shopping
+            </a>
+
+            <form method="post"
+                  asp-page-handler="PlaceOrder">
+                <button type="submit"
+                        class="btn btn-success">
+                    Place Order
+                </button>
+            </form>
+        </div>
+    }
+
+    <!-- Displays the appropriate result after the customer attempts to place an order. -->
+    @if (Model.CreatedOrder != null)
+    {
+        @if (Model.CreatedOrder.ConflictingAllergens.Count > 0)
+        {
+            <!-- Shows a prominent warning when checkout detects an allergy conflict. -->
+            <div class="alert alert-danger mt-4"
+                 role="alert">
+
+                <h4 class="alert-heading">
+                    Allergy Conflict Detected
+                </h4>
+
+                <p>
+                    Your order contains one or more items that conflict
+                    with your saved allergy profile.
+                </p>
+
+                <p>
+                    <strong>Conflicting allergens:</strong>
+                    @string.Join(
+                        ", ",
+                        Model.CreatedOrder.ConflictingAllergens.Select(a => a.Name))
+                </p>
+
+                <p>
+                    <strong>Affected menu items:</strong>
+                    @string.Join(
+                        ", ",
+                        Model.ConflictingMenuItems.Select(i => i.Name))
+                </p>
+
+                <hr />
+
+                <p>
+                    Order ID:
+                    <strong>@Model.CreatedOrder.Id</strong>
+                </p>
+
+                <p>
+                    Status:
+                    <strong>@Model.CreatedOrder.Status</strong>
+                </p>
+
+                <p class="mb-0">
+                    This order cannot proceed until the allergy conflict has been resolved.
+                </p>
+            </div>
+        }
+        else
+        {
+            <!-- Confirms successful placement when the completed checkout has no allergy conflicts. -->
+            <div class="alert alert-success mt-4"
+                 role="alert">
+
+                <h4 class="alert-heading">
+                    Order Placed Successfully
+                </h4>
+
+                <p>
+                    Your order has been created successfully.
+                </p>
+
+                <p>
+                    Order ID:
+                    <strong>@Model.CreatedOrder.Id</strong>
+                </p>
+
+                <p>
+                    Status:
+                    <strong>@Model.CreatedOrder.Status</strong>
+                </p>
+
+                <p class="mb-0">
+                    Total ordered items:
+                    <strong>
+                        @Model.CreatedOrder.Items.Sum(i => i.Quantity)
+                    </strong>
+                </p>
+            </div>
+        }
+    }
+</div>
