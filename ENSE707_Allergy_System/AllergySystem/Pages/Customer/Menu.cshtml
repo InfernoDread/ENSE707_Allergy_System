@@ -6,13 +6,23 @@
 }
 
 <div class="container mt-4">
-    <h1>Menu</h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1>Menu</h1>
 
-    <p class="text-muted">
-        Select a menu item to check it against your saved allergy profile.
-    </p>
+            <p class="text-muted mb-0">
+                Add menu items to your cart. Your saved allergy profile will be checked automatically.
+            </p>
+        </div>
 
-    <!-- Displays the available menu items and allows the customer to select one for allergy checking. -->
+        <div>
+            <a asp-page="/Customer/Cart" class="btn btn-outline-primary">
+                Cart (@Model.CartItemCount)
+            </a>
+        </div>
+    </div>
+
+    <!-- Displays the available menu items and allows the customer to add safe items to their cart. -->
     <form method="post">
         <div class="row">
             @foreach (var item in Model.MenuItems)
@@ -35,7 +45,7 @@
                                     name="SelectedMenuItemId"
                                     value="@item.Id"
                                     class="btn btn-primary">
-                                Check for Allergy Conflicts
+                                Add to Cart
                             </button>
                         </div>
                     </div>
@@ -44,39 +54,42 @@
         </div>
     </form>
 
-    <!-- Displays the result of checking the selected menu item against the customer's allergy profile. -->
+    <!-- Displays the result after the customer attempts to add an item to the cart. -->
     @if (Model.SelectedMenuItem != null)
     {
         <div class="mt-4">
             @if (Model.Conflicts.Count > 0)
             {
-                <!-- Shows a warning when one or more conflicting allergens are detected. -->
+                <!-- Shows a warning when the selected item conflicts with the customer's allergy profile. -->
                 <div class="alert alert-danger" role="alert">
                     <h4 class="alert-heading">Allergy Warning</h4>
 
                     <p>
                         <strong>@Model.SelectedMenuItem.Name</strong>
-                        conflicts with your allergy profile.
+                        contains allergens that conflict with your saved allergy profile.
                     </p>
 
-                    <p class="mb-0">
+                    <p>
                         Conflicting allergens:
                         <strong>
                             @string.Join(", ", Model.Conflicts.Select(a => a.Name))
                         </strong>
                     </p>
-                </div>
-            }
-            else
-            {
-                <!-- Confirms that no allergen conflicts were found for the selected menu item. -->
-                <div class="alert alert-success" role="alert">
-                    <h4 class="alert-heading">No Allergy Conflicts Found</h4>
 
                     <p class="mb-0">
-                        No conflicts were found between
+                        This item was not added to your cart.
+                    </p>
+                </div>
+            }
+            else if (Model.ItemAddedToCart)
+            {
+                <!-- Confirms that the selected item was safely added to the cart. -->
+                <div class="alert alert-success" role="alert">
+                    <h4 class="alert-heading">Added to Cart</h4>
+
+                    <p class="mb-0">
                         <strong>@Model.SelectedMenuItem.Name</strong>
-                        and your saved allergy profile.
+                        was added to your cart successfully.
                     </p>
                 </div>
             }

@@ -14,14 +14,14 @@ namespace AllergySystem.Models
     }
 
     // This class represents a customer order in the allergy system.
-    // It stores the selected menu item, order status, creation time, and any conflicting allergens.
+    // It stores the selected menu items, order status, creation time, and any conflicting allergens.
     public class Order
     {
         public int Id { get; set; }
 
         public int CustomerId { get; set; }
 
-        public MenuItem MenuItem { get; set; } = new();
+        public List<CartItem> Items { get; set; } = new();
 
         public DateTime CreatedAt { get; set; }
 

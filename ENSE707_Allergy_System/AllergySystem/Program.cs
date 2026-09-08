@@ -12,6 +12,10 @@ builder.Services.AddSingleton<AllergyProfileService>();
 builder.Services.AddSingleton<MenuCatalogService>();
 builder.Services.AddSingleton<AllergyValidationService>();
 builder.Services.AddSingleton<AllergenRecommendationService>();
+builder.Services.AddSingleton<InMemoryOrderStore>();
+builder.Services.AddSingleton<OrderService>();
+builder.Services.AddSingleton<InMemoryCartStore>();
+builder.Services.AddSingleton<CartService>();
 
 var app = builder.Build();
 
