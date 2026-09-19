@@ -164,7 +164,7 @@ namespace AllergySystem.Tests
         }
 
         [TestMethod]
-        public void UpdateOrderStatus_NoConflict_AllowsTransitionToInPreparation()
+        public void UpdateOrderStatus_NoConflict_AllowsTransitionToReadyForKitchen()
         {
             // Arrange
             var service = CreateService(
@@ -185,15 +185,172 @@ namespace AllergySystem.Tests
             // Act
             service.UpdateOrderStatus(
                 created.Id,
-                OrderStatus.InPreparation);
+                OrderStatus.ReadyForKitchen);
 
             // Assert
             var persisted = orderStore.GetOrder(created.Id);
 
             Assert.IsNotNull(persisted);
             Assert.AreEqual(
-                OrderStatus.InPreparation,
+                OrderStatus.ReadyForKitchen,
                 persisted.Status);
+        }
+
+        [TestMethod]
+        public void GetActiveOrders_ExcludesCompletedAndCancelledOrders()
+        {
+            // Arrange
+            var service = CreateService(
+                out var orderStore,
+                out var cartService,
+                out var profileStore);
+
+            var profile = profileStore.GetProfile(10);
+            profile.Allergens.Clear();
+            profileStore.SaveProfile(profile);
+
+            cartService.AddItem(10, 5);
+            var pending = service.CreateOrderFromCart(10);
+
+            cartService.AddItem(11, 5);
+            var completed = service.CreateOrderFromCart(11);
+            service.UpdateOrderStatus(completed.Id, OrderStatus.Completed);
+
+            cartService.AddItem(12, 5);
+            var cancelled = service.CreateOrderFromCart(12);
+            service.CancelOrder(cancelled.Id);
+
+            // Act
+            var activeOrders = service.GetActiveOrders();
+
+            // Assert
+            Assert.Contains(pending.Id, activeOrders.Select(order => order.Id).ToList());
+            Assert.DoesNotContain(completed.Id, activeOrders.Select(order => order.Id).ToList());
+            Assert.DoesNotContain(cancelled.Id, activeOrders.Select(order => order.Id).ToList());
+        }
+
+        [TestMethod]
+        public void SendToKitchen_SafePendingOrder_SetsReadyForKitchen()
+        {
+            // Arrange
+            var service = CreateService(
+                out var orderStore,
+                out var cartService,
+                out var profileStore);
+
+            var profile = profileStore.GetProfile(13);
+            profile.Allergens.Clear();
+            profileStore.SaveProfile(profile);
+            cartService.AddItem(13, 5);
+            var created = service.CreateOrderFromCart(13);
+
+            // Act
+            service.SendToKitchen(created.Id);
+
+            // Assert
+            Assert.AreEqual(
+                OrderStatus.ReadyForKitchen,
+                orderStore.GetOrder(created.Id)!.Status);
+        }
+
+        [TestMethod]
+        public void FrontOfHouseOrderActions_InvalidOrderId_ThrowsArgumentException()
+        {
+            // Arrange
+            var service = CreateService(
+                out _,
+                out _,
+                out _);
+
+            // Act & Assert
+            Assert.ThrowsExactly<ArgumentException>(
+                () => service.SendToKitchen(999));
+            Assert.ThrowsExactly<ArgumentException>(
+                () => service.CancelOrder(999));
+        }
+
+        [TestMethod]
+        public void SendToKitchen_OrderWithConflict_ThrowsAndRemainsPendingAllergyConfirmation()
+        {
+            // Arrange
+            var service = CreateService(
+                out var orderStore,
+                out var cartService,
+                out var profileStore);
+
+            var profile = profileStore.GetProfile(14);
+            profile.Allergens.Clear();
+            profileStore.SaveProfile(profile);
+            cartService.AddItem(14, 4);
+
+            profile.Allergens = new List<Allergen>
+            {
+                new Allergen
+                {
+                    Id = 3,
+                    Name = "Milk"
+                }
+            };
+            profileStore.SaveProfile(profile);
+
+            var created = service.CreateOrderFromCart(14);
+
+            // Act & Assert
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => service.SendToKitchen(created.Id));
+            Assert.AreEqual(
+                OrderStatus.PendingAllergyConfirmation,
+                orderStore.GetOrder(created.Id)!.Status);
+        }
+
+        [TestMethod]
+        public void CancelOrder_ActiveOrder_SetsCancelled()
+        {
+            // Arrange
+            var service = CreateService(
+                out var orderStore,
+                out var cartService,
+                out var profileStore);
+
+            var profile = profileStore.GetProfile(15);
+            profile.Allergens.Clear();
+            profileStore.SaveProfile(profile);
+            cartService.AddItem(15, 5);
+            var created = service.CreateOrderFromCart(15);
+
+            // Act
+            service.CancelOrder(created.Id);
+
+            // Assert
+            Assert.AreEqual(
+                OrderStatus.Cancelled,
+                orderStore.GetOrder(created.Id)!.Status);
+        }
+
+        [TestMethod]
+        public void CancelOrder_OrderInKitchenProcessing_SetsCancelled()
+        {
+            // Arrange
+            var service = CreateService(
+                out var orderStore,
+                out var cartService,
+                out var profileStore);
+
+            var profile = profileStore.GetProfile(17);
+            profile.Allergens.Clear();
+            profileStore.SaveProfile(profile);
+            cartService.AddItem(17, 5);
+            var created = service.CreateOrderFromCart(17);
+            service.UpdateOrderStatus(created.Id, OrderStatus.ReadyForKitchen);
+            service.UpdateOrderStatus(created.Id, OrderStatus.InPreparation);
+
+            // Act
+            service.CancelOrder(created.Id);
+
+            // Assert
+            Assert.AreEqual(
+                OrderStatus.Cancelled,
+                orderStore.GetOrder(created.Id)!.Status);
         }
 
         [TestMethod]
@@ -238,6 +395,128 @@ namespace AllergySystem.Tests
             Assert.AreEqual(
                 OrderStatus.PendingAllergyConfirmation,
                 persisted.Status);
+        }
+
+        [TestMethod]
+        public void UpdateOrderStatus_WithConflict_CannotMoveToReadyForKitchen()
+        {
+            // Arrange
+            var service = CreateService(
+                out var orderStore,
+                out var cartService,
+                out var profileStore);
+
+            var customerId = 8;
+
+            var profile = profileStore.GetProfile(customerId);
+            profile.Allergens.Clear();
+            profileStore.SaveProfile(profile);
+
+            cartService.AddItem(customerId, 4);
+
+            profile.Allergens = new List<Allergen>
+            {
+                new Allergen
+                {
+                    Id = 3,
+                    Name = "Milk"
+                }
+            };
+            profileStore.SaveProfile(profile);
+
+            var created = service.CreateOrderFromCart(customerId);
+
+            // Act & Assert
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => service.UpdateOrderStatus(
+                    created.Id,
+                    OrderStatus.ReadyForKitchen));
+
+            var persisted = orderStore.GetOrder(created.Id);
+
+            Assert.IsNotNull(persisted);
+            Assert.AreEqual(
+                OrderStatus.PendingAllergyConfirmation,
+                persisted.Status);
+        }
+
+        [TestMethod]
+        public void UpdateOrderStatus_WithConflict_CannotMoveToKitchenOrCompletedStatuses()
+        {
+            // Arrange
+            var service = CreateService(
+                out var orderStore,
+                out var cartService,
+                out var profileStore);
+
+            var customerId = 16;
+
+            var profile = profileStore.GetProfile(customerId);
+            profile.Allergens.Clear();
+            profileStore.SaveProfile(profile);
+            cartService.AddItem(customerId, 4);
+
+            profile.Allergens = new List<Allergen>
+            {
+                new Allergen
+                {
+                    Id = 3,
+                    Name = "Milk"
+                }
+            };
+            profileStore.SaveProfile(profile);
+
+            var created = service.CreateOrderFromCart(customerId);
+
+            // Act & Assert
+            foreach (var unsafeStatus in new[]
+            {
+                OrderStatus.ReadyForKitchen,
+                OrderStatus.InPreparation,
+                OrderStatus.Completed
+            })
+            {
+                Assert.ThrowsExactly<InvalidOperationException>(
+                    () => service.UpdateOrderStatus(
+                        created.Id,
+                        unsafeStatus));
+            }
+
+            Assert.AreEqual(
+                OrderStatus.PendingAllergyConfirmation,
+                orderStore.GetOrder(created.Id)!.Status);
+        }
+
+        [TestMethod]
+        public void UpdateOrderStatus_CompletedOrder_CannotBeCancelled()
+        {
+            // Arrange
+            var service = CreateService(
+                out var orderStore,
+                out var cartService,
+                out var profileStore);
+
+            var customerId = 9;
+
+            var profile = profileStore.GetProfile(customerId);
+            profile.Allergens.Clear();
+            profileStore.SaveProfile(profile);
+
+            cartService.AddItem(customerId, 5);
+
+            var created = service.CreateOrderFromCart(customerId);
+            service.UpdateOrderStatus(created.Id, OrderStatus.Completed);
+
+            // Act & Assert
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => service.UpdateOrderStatus(
+                    created.Id,
+                    OrderStatus.Cancelled));
+
+            var persisted = orderStore.GetOrder(created.Id);
+
+            Assert.IsNotNull(persisted);
+            Assert.AreEqual(OrderStatus.Completed, persisted.Status);
         }
 
         [TestMethod]

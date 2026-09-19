@@ -14,6 +14,7 @@ builder.Services.AddSingleton<AllergyValidationService>();
 builder.Services.AddSingleton<AllergenRecommendationService>();
 builder.Services.AddSingleton<InMemoryOrderStore>();
 builder.Services.AddSingleton<OrderService>();
+builder.Services.AddSingleton<FrontOfHouseOrderService>();
 builder.Services.AddSingleton<InMemoryCartStore>();
 builder.Services.AddSingleton<CartService>();
 

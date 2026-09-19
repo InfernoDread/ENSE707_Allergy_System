@@ -45,5 +45,15 @@ namespace AllergySystem.Services
         {
             return _orders.Values.ToList();
         }
+
+        // Returns orders that still require operational handling.
+        public List<Order> GetActiveOrders()
+        {
+            return _orders.Values
+                .Where(order =>
+                    order.Status != OrderStatus.Completed &&
+                    order.Status != OrderStatus.Cancelled)
+                .ToList();
+        }
     }
 }
