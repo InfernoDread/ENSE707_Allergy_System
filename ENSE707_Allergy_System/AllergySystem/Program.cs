@@ -8,10 +8,12 @@ builder.Services.AddRazorPages();
 // Register application services as singletons so in-memory data remains available for the lifetime of the running application.
 builder.Services.AddSingleton<InMemoryAllergyProfileStore>();
 builder.Services.AddSingleton<AllergenCatalogService>();
+builder.Services.AddSingleton<DietaryRestrictionCatalogService>();
 builder.Services.AddSingleton<AllergyProfileService>();
 builder.Services.AddSingleton<MenuCatalogService>();
 builder.Services.AddSingleton<AllergyValidationService>();
 builder.Services.AddSingleton<AllergenRecommendationService>();
+builder.Services.AddSingleton<DietaryRestrictionRecommendationService>();
 builder.Services.AddSingleton<InMemoryOrderStore>();
 builder.Services.AddSingleton<OrderService>();
 builder.Services.AddSingleton<InMemoryCartStore>();
