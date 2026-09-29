@@ -8,8 +8,9 @@
     <h1>My Allergy Profile</h1>
 
     <p>
-        Select any food allergies that apply to you.
-        These selections will be used when validating menu items.
+        Select any food allergies and dietary restrictions that apply to you.
+        Allergies are used for safety validation, while dietary restrictions
+        are used to provide additional menu warnings.
     </p>
 
     <!-- Displays confirmation after the customer's allergy profile is successfully saved. -->
@@ -22,34 +23,85 @@
 
     <!-- Displays the approved allergen catalogue and allows the customer to save their selections. -->
     <form method="post">
-        <fieldset>
-            <legend>Select Your Allergies:</legend>
-            <div class="allergen-grid">
-                @foreach (var allergen in Model.AvailableAllergens)
-                {
-                    var isChecked = Model.SelectedAllergenIds.Contains(allergen.Id);
+        <div class="row g-4 align-items-start">
 
-                    <label class="allergen-option">
-                        <input type="checkbox" name="SelectedAllergenIds" value="@allergen.Id" checked="@isChecked" />
-                        <span>@allergen.Name</span>
-                    </label>
-                }
+            <!-- Allergies are the primary safety-critical profile information. -->
+            <div class="col-md-8">
+                <fieldset>
+                    <legend>Select Your Allergies:</legend>
+
+                    <div class="allergen-grid">
+                        @foreach (var allergen in Model.AvailableAllergens)
+                        {
+                            var isChecked = Model.SelectedAllergenIds.Contains(allergen.Id);
+
+                            <label class="allergen-option">
+                                <input type="checkbox"
+                                       name="SelectedAllergenIds"
+                                       value="@allergen.Id"
+                                       checked="@isChecked" />
+                                <span>@allergen.Name</span>
+                            </label>
+                        }
+                    </div>
+                </fieldset>
             </div>
-        </fieldset>
-        <button type="submit" class="btn btn-primary mt-3">Save Profile</button>
+
+            <!-- Dietary restrictions are secondary advisory preferences. -->
+            <div class="col-md-4">
+                <fieldset class="dietary-restrictions-panel">
+                    <legend class="fs-5">Dietary Restrictions / Preferences</legend>
+
+                    <p class="small text-muted">
+                        Select any dietary restrictions or preferences that apply to you.
+                    </p>
+
+                    <div class="d-flex flex-column gap-2">
+                        @foreach (var restriction in Model.AvailableDietaryRestrictions)
+                        {
+                            var isChecked =
+                                Model.SelectedDietaryRestrictionIds.Contains(restriction.Id);
+
+                            <label class="small">
+                                <input type="checkbox"
+                                       name="SelectedDietaryRestrictionIds"
+                                       value="@restriction.Id"
+                                       checked="@isChecked" />
+                                <span>@restriction.Name</span>
+                            </label>
+                        }
+                    </div>
+                </fieldset>
+            </div>
+
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">
+            Save Profile
+        </button>
     </form>
 
     <hr />
 
-    <!-- Provides access to the allergen recommendation workflow when an allergen is not listed. -->
+    <!-- Provides access to recommendation/request workflows when an option is not listed. -->
     <section class="recommended-allergen">
-        <h2>Can't find your allergen?</h2>
+        <h2>Can't find what you're looking for?</h2>
 
         <p>
             If your allergen is not listed, you can recommend it for administrator approval.
         </p>
+
         <a asp-page="/Customer/RecommendAllergen" class="btn btn-outline-primary">
             Recommend an additional allergen
+        </a>
+
+        <p class="mt-3 mb-2">
+            If your dietary restriction or preference is not listed, you can request it here.
+        </p>
+
+        <a asp-page="/Customer/RecommendDietaryRestriction"
+           class="btn btn-sm btn-outline-secondary">
+            Request an additional dietary restriction
         </a>
     </section>
 </div>

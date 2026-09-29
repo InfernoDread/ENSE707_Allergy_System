@@ -1,0 +1,45 @@
+﻿@page
+@model AllergySystem.Pages.Customer.RecommendDietaryRestrictionModel
+@{
+    ViewData["Title"] = "Request Dietary Restriction";
+}
+
+<div class="recommend-dietary-restriction-page">
+    <h1>Request a Dietary Restriction or Preference</h1>
+
+    <p>
+        If a dietary restriction or preference that applies to you is not
+        currently listed, you can request it here for review.
+    </p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+    {
+        <div class="alert alert-success" role="status">
+            @Model.SuccessMessage
+        </div>
+    }
+
+    <form method="post">
+        <div class="mb-3">
+            <label asp-for="RestrictionName" class="form-label">
+                Dietary Restriction or Preference
+            </label>
+
+            <input asp-for="RestrictionName"
+                   class="form-control"
+                   placeholder="e.g. Low-Sodium" />
+
+            <span asp-validation-for="RestrictionName"
+                  class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Submit Request
+        </button>
+
+        <a asp-page="/Customer/AllergyProfile"
+           class="btn btn-outline-secondary ms-2">
+            Back to Allergy Profile
+        </a>
+    </form>
+</div>

@@ -1,11 +1,11 @@
 @page
 @model AllergySystem.Pages.Admin.AllergenRecommendationsModel
 @{
-    ViewData["Title"] = "Allergen Recommendations";
+    ViewData["Title"] = "Customer Recommendations";
 }
 
 <div class="admin-recommendations-page">
-    <h1>Pending Allergen Recommendations</h1>
+    <h1>Pending Customer Recommendations</h1>
 
     <!-- Displays feedback after an administrator approves or rejects a recommendation. -->
     @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
@@ -15,7 +15,10 @@
         </div>
     }
 
-    <!-- Shows an empty-state message when there are no recommendations waiting for review. -->
+    <h2>Allergen Recommendations</h2>
+    <p>Review allergens submitted by customers. Approved recommendations are added to the allergen catalogue.</p>
+
+    <!-- Shows an empty-state message when there are no allergen recommendations waiting for review. -->
     @if (Model.PendingRecommendations.Count == 0)
     {
         <div class="admin-empty-state">
@@ -24,7 +27,7 @@
     }
     else
     {
-        <!-- Displays all pending recommendations and provides approval and rejection actions. -->
+        <!-- Displays all pending allergen recommendations and provides approval and rejection actions. -->
         <div class="table-responsive">
             <table class="table table-striped admin-recommendations-table">
                 <thead>
@@ -47,13 +50,96 @@
                             <td>
                                 <div class="admin-action-group">
                                     <form method="post" asp-page-handler="Approve">
-                                        <input type="hidden" name="recommendationId" value="@recommendation.Id" />
-                                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                        <input type="hidden"
+                                               name="recommendationId"
+                                               value="@recommendation.Id" />
+
+                                        <button type="submit"
+                                                class="btn btn-success btn-sm">
+                                            Approve
+                                        </button>
                                     </form>
 
                                     <form method="post" asp-page-handler="Reject">
-                                        <input type="hidden" name="recommendationId" value="@recommendation.Id" />
-                                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                        <input type="hidden"
+                                               name="recommendationId"
+                                               value="@recommendation.Id" />
+
+                                        <button type="submit"
+                                                class="btn btn-danger btn-sm">
+                                            Reject
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <!-- Separates allergen recommendations from dietary restriction requests. -->
+    <hr class="my-4" />
+
+    <h2>Pending Dietary Restriction / Preference Requests</h2>
+
+    <p>
+        Review dietary restrictions or preferences submitted by customers.
+        Approved requests are added to the dietary restriction catalogue.
+    </p>
+
+    <!-- Shows an empty-state message when there are no dietary restriction requests waiting for review. -->
+    @if (Model.PendingDietaryRestrictionRecommendations.Count == 0)
+    {
+        <div class="admin-empty-state">
+            There are no pending dietary restriction requests.
+        </div>
+    }
+    else
+    {
+        <!-- Displays all pending dietary restriction requests and provides approval and rejection actions. -->
+        <div class="table-responsive">
+            <table class="table table-striped admin-recommendations-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Dietary Restriction / Preference</th>
+                        <th>Customer ID</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var recommendation in Model.PendingDietaryRestrictionRecommendations)
+                    {
+                        <tr>
+                            <td>@recommendation.Id</td>
+                            <td>@recommendation.Name</td>
+                            <td>@recommendation.CustomerId</td>
+                            <td>
+                                <div class="admin-action-group">
+                                    <form method="post"
+                                          asp-page-handler="ApproveDietaryRestriction">
+                                        <input type="hidden"
+                                               name="recommendationId"
+                                               value="@recommendation.Id" />
+
+                                        <button type="submit"
+                                                class="btn btn-success btn-sm">
+                                            Approve
+                                        </button>
+                                    </form>
+
+                                    <form method="post"
+                                          asp-page-handler="RejectDietaryRestriction">
+                                        <input type="hidden"
+                                               name="recommendationId"
+                                               value="@recommendation.Id" />
+
+                                        <button type="submit"
+                                                class="btn btn-danger btn-sm">
+                                            Reject
+                                        </button>
                                     </form>
                                 </div>
                             </td>
