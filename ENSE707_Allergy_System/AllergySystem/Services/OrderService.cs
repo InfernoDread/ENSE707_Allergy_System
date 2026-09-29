@@ -75,6 +75,21 @@ namespace AllergySystem.Services
             return savedOrder;
         }
 
+        public List<Order> GetActiveOrders()
+        {
+            return _orderStore.GetActiveOrders();
+        }
+
+        public void SendToKitchen(int orderId)
+        {
+            UpdateOrderStatus(orderId, OrderStatus.ReadyForKitchen);
+        }
+
+        public void CancelOrder(int orderId)
+        {
+            UpdateOrderStatus(orderId, OrderStatus.Cancelled);
+        }
+
         // Updates an order's status while preventing orders with unresolved allergen conflicts from progressing to an unsafe status.
         public void UpdateOrderStatus(
             int orderId,
@@ -84,6 +99,29 @@ namespace AllergySystem.Services
                 ?? throw new ArgumentException(
                     "Order not found",
                     nameof(orderId));
+
+            if (newStatus == OrderStatus.ReadyForKitchen &&
+                (order.Status != OrderStatus.Pending ||
+                 order.ConflictingAllergens.Any()))
+            {
+                throw new InvalidOperationException(
+                    "Only safe Pending orders may move to ReadyForKitchen.");
+            }
+
+            if (newStatus == OrderStatus.Cancelled &&
+                (order.Status == OrderStatus.Completed ||
+                 order.Status == OrderStatus.Cancelled))
+            {
+                throw new InvalidOperationException(
+                    "Completed or Cancelled orders cannot be cancelled again.");
+            }
+
+            if (order.Status == OrderStatus.Completed ||
+                order.Status == OrderStatus.Cancelled)
+            {
+                throw new InvalidOperationException(
+                    "Completed or Cancelled orders are no longer active FOH work.");
+            }
 
             // Orders with allergen conflicts can only remain awaiting confirmation or be cancelled until the conflict has been resolved.
             if (order.ConflictingAllergens.Any())

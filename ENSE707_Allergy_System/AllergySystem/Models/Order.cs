@@ -8,6 +8,7 @@ namespace AllergySystem.Models
     {
         Pending,
         PendingAllergyConfirmation,
+        ReadyForKitchen,
         InPreparation,
         Completed,
         Cancelled
