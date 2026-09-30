@@ -1,0 +1,48 @@
+@page
+@model AllergySystem.Pages.Admin.AuditHistoryModel
+@{
+    ViewData["Title"] = "Audit History";
+}
+
+<div class="admin-audit-history-page">
+    <h1>Audit History</h1>
+
+    <p>View a read-only history of system audit entries. Entries are shown newest first.</p>
+
+    @if (Model.Entries.Count == 0)
+    {
+        <div class="admin-empty-state">
+            There are no audit entries recorded.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped admin-audit-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp (UTC)</th>
+                        <th>Actor Role</th>
+                        <th>Action</th>
+                        <th>Entity Type</th>
+                        <th>Entity Id</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in Model.Entries)
+                    {
+                        <tr>
+                            <td>@entry.TimestampUtc.ToString("dd/MM/yyyy HH:mm 'UTC'")</td>
+                            <td>@entry.ActorRole</td>
+                            <td>@entry.Action</td>
+                            <td>@entry.EntityType</td>
+                            <td>@(entry.EntityId.HasValue ? entry.EntityId.Value.ToString() : "-")</td>
+                            <td class="text-break">@entry.Details</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

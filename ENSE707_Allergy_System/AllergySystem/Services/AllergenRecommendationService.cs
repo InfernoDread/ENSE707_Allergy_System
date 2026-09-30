@@ -9,11 +9,13 @@ namespace AllergySystem.Services
         private readonly Dictionary<int, AllergenRecommendation> _recommendations = new();
         private int _nextId = 1;
         private readonly AllergenCatalogService _catalogService;
+        private readonly AuditService _auditService;
 
         // Creates the service using the approved allergen catalogue.
-        public AllergenRecommendationService(AllergenCatalogService catalogService)
+        public AllergenRecommendationService(AllergenCatalogService catalogService, AuditService auditService)
         {
             _catalogService = catalogService;
+            _auditService = auditService;
         }
 
         // Submits a new allergen recommendation after validating the customer ID, allergen name, and checking for existing allergens or recommendations.
@@ -72,6 +74,9 @@ namespace AllergySystem.Services
             _catalogService.AddAllergen(recommendation.SuggestedName);
 
             recommendation.Status = "Approved";
+
+            _auditService.Record("Administration", "ApproveAllergenRecommendation", "AllergenRecommendation", recommendationId, $"Approved allergen recommendation: {recommendation.SuggestedName}");
+
             return true;
         }
 
@@ -87,6 +92,9 @@ namespace AllergySystem.Services
                 throw new InvalidOperationException("Only a Pending recommendation can be rejected.");
 
             recommendation.Status = "Rejected";
+
+            _auditService.Record("Administration", "RejectAllergenRecommendation", "AllergenRecommendation", recommendationId, $"Rejected allergen recommendation: {recommendation.SuggestedName}");
+
             return true;
         }
 
