@@ -12,6 +12,9 @@ builder.Services.AddSingleton<DietaryRestrictionCatalogService>();
 builder.Services.AddSingleton<AllergyProfileService>();
 builder.Services.AddSingleton<MenuCatalogService>();
 builder.Services.AddSingleton<AllergyValidationService>();
+builder.Services.AddSingleton<InMemoryAuditStore>();
+builder.Services.AddSingleton<AuditService>();
+
 builder.Services.AddSingleton<AllergenRecommendationService>();
 builder.Services.AddSingleton<DietaryRestrictionRecommendationService>();
 builder.Services.AddSingleton<InMemoryOrderStore>();

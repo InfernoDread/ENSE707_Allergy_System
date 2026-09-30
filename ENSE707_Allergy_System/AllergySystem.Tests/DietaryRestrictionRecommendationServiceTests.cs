@@ -14,7 +14,10 @@ namespace AllergySystem.Tests
         {
             // Arrange
             var catalogService = new DietaryRestrictionCatalogService();
-            var service = new DietaryRestrictionRecommendationService(catalogService);
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+
+            var service = new DietaryRestrictionRecommendationService(catalogService, auditService);
 
             // Act
             var result = service.SubmitRecommendation(1, "Halal");
@@ -31,7 +34,10 @@ namespace AllergySystem.Tests
         {
             // Arrange
             var catalogService = new DietaryRestrictionCatalogService();
-            var service = new DietaryRestrictionRecommendationService(catalogService);
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+
+            var service = new DietaryRestrictionRecommendationService(catalogService, auditService);
 
             // Act
             var result = service.SubmitRecommendation(2, "  Low-Sodium  ");
@@ -45,7 +51,10 @@ namespace AllergySystem.Tests
         {
             // Arrange
             var catalogService = new DietaryRestrictionCatalogService();
-            var service = new DietaryRestrictionRecommendationService(catalogService);
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+
+            var service = new DietaryRestrictionRecommendationService(catalogService, auditService);
 
             // Act
             var first = service.SubmitRecommendation(1, "Halal");
@@ -62,7 +71,10 @@ namespace AllergySystem.Tests
         {
             // Arrange
             var catalogService = new DietaryRestrictionCatalogService();
-            var service = new DietaryRestrictionRecommendationService(catalogService);
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+
+            var service = new DietaryRestrictionRecommendationService(catalogService, auditService);
 
             // Act
             service.SubmitRecommendation(3, "Low-Sodium");
@@ -79,7 +91,10 @@ namespace AllergySystem.Tests
         {
             // Arrange
             var catalogService = new DietaryRestrictionCatalogService();
-            var service = new DietaryRestrictionRecommendationService(catalogService);
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+
+            var service = new DietaryRestrictionRecommendationService(catalogService, auditService);
 
             // Act & Assert
             Assert.ThrowsExactly<ArgumentException>(
@@ -91,7 +106,10 @@ namespace AllergySystem.Tests
         {
             // Arrange
             var catalogService = new DietaryRestrictionCatalogService();
-            var service = new DietaryRestrictionRecommendationService(catalogService);
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+
+            var service = new DietaryRestrictionRecommendationService(catalogService, auditService);
 
             // Act & Assert
             Assert.ThrowsExactly<ArgumentException>(
@@ -103,7 +121,10 @@ namespace AllergySystem.Tests
         {
             // Arrange
             var catalogService = new DietaryRestrictionCatalogService();
-            var service = new DietaryRestrictionRecommendationService(catalogService);
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+
+            var service = new DietaryRestrictionRecommendationService(catalogService, auditService);
 
             var recommendation =
                 service.SubmitRecommendation(1, "Low-Sodium");
@@ -126,7 +147,10 @@ namespace AllergySystem.Tests
         {
             // Arrange
             var catalogService = new DietaryRestrictionCatalogService();
-            var service = new DietaryRestrictionRecommendationService(catalogService);
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+
+            var service = new DietaryRestrictionRecommendationService(catalogService, auditService);
 
             var recommendation =
                 service.SubmitRecommendation(1, "Low-Sodium");

@@ -8,19 +8,18 @@ namespace AllergySystem.Services
     {
         private readonly List<DietaryRestrictionRecommendation> _recommendations = new();
         private readonly DietaryRestrictionCatalogService _catalogService;
+        private readonly AuditService _auditService;
         private int _nextId = 1;
 
         // Creates the service using the dietary restriction catalogue.
-        public DietaryRestrictionRecommendationService(
-            DietaryRestrictionCatalogService catalogService)
+        public DietaryRestrictionRecommendationService(DietaryRestrictionCatalogService catalogService, AuditService auditService)
         {
             _catalogService = catalogService;
+            _auditService = auditService;
         }
 
         // Submits a new dietary restriction request for review.
-        public DietaryRestrictionRecommendation SubmitRecommendation(
-            int customerId,
-            string name)
+        public DietaryRestrictionRecommendation SubmitRecommendation(int customerId, string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -81,6 +80,8 @@ namespace AllergySystem.Services
             _catalogService.AddDietaryRestriction(recommendation.Name);
             recommendation.Status = "Approved";
 
+            _auditService.Record("Administration", "ApproveDietaryRestrictionRecommendation", "DietaryRestrictionRecommendation", recommendationId, $"Approved dietary restriction recommendation: {recommendation.Name}");
+
             return true;
         }
 
@@ -105,6 +106,8 @@ namespace AllergySystem.Services
             }
 
             recommendation.Status = "Rejected";
+
+            _auditService.Record("Administration", "RejectDietaryRestrictionRecommendation", "DietaryRestrictionRecommendation", recommendationId, $"Rejected dietary restriction recommendation: {recommendation.Name}");
 
             return true;
         }

@@ -12,7 +12,10 @@ namespace AllergySystem.Tests
         private static AllergenRecommendationService CreateService()
         {
             var catalogService = new AllergenCatalogService();
-            return new AllergenRecommendationService(catalogService);
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+
+            return new AllergenRecommendationService(catalogService, auditService);
         }
 
         [TestMethod]
@@ -132,7 +135,10 @@ namespace AllergySystem.Tests
         {
             // Arrange
             var catalogService = new AllergenCatalogService();
-            var service = new AllergenRecommendationService(catalogService);
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+
+            var service = new AllergenRecommendationService(catalogService, auditService);
 
             // Act & Assert
             Assert.ThrowsExactly<InvalidOperationException>(
@@ -144,7 +150,10 @@ namespace AllergySystem.Tests
         {
             // Arrange
             var catalogService = new AllergenCatalogService();
-            var service = new AllergenRecommendationService(catalogService);
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+
+            var service = new AllergenRecommendationService(catalogService, auditService);
 
             var recommendation =
                 service.SubmitRecommendation(1, "Mustard");
