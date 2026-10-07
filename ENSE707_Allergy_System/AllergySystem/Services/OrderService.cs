@@ -51,13 +51,28 @@ namespace AllergySystem.Services
 
                 // Copy the cart contents into the order so the order
                 // remains independent of the shopping cart.
-                Items = cart.Items
-                    .Select(item => new CartItem
+                Items = cart.Items.Select(item => new CartItem
+                {
+                    MenuItem = new MenuItem
                     {
-                        MenuItem = item.MenuItem,
-                        Quantity = item.Quantity
-                    })
-                    .ToList(),
+                        Id = item.MenuItem.Id,
+                        Name = item.MenuItem.Name,
+                        Description = item.MenuItem.Description,
+
+                        Ingredients = item.MenuItem.Ingredients.Select(ingredient => new Ingredient
+                        {
+                            Id = ingredient.Id,
+                            Name = ingredient.Name,
+
+                            Allergens = ingredient.Allergens.Select(allergen => new Allergen
+                            {
+                                Id = allergen.Id,
+                                Name = allergen.Name
+                            }).ToList()
+                        }).ToList()
+                    },  
+                    Quantity = item.Quantity
+                }).ToList(),
 
                 CreatedAt = DateTime.UtcNow,
                 ConflictingAllergens = conflicts,
@@ -91,33 +106,31 @@ namespace AllergySystem.Services
         }
 
         // Updates an order's status while preventing orders with unresolved allergen conflicts from progressing to an unsafe status.
-        public void UpdateOrderStatus(
-            int orderId,
-            OrderStatus newStatus)
+        public void UpdateOrderStatus(int orderId, OrderStatus newStatus)
         {
             var order = _orderStore.GetOrder(orderId)
                 ?? throw new ArgumentException(
                     "Order not found",
                     nameof(orderId));
+            if (newStatus == OrderStatus.InPreparation || newStatus == OrderStatus.Completed)
+            {
+                throw new InvalidOperationException(
+                    "InPreparation and Completed transitions must be handled by the kitchen workflow.");
+            }
 
-            if (newStatus == OrderStatus.ReadyForKitchen &&
-                (order.Status != OrderStatus.Pending ||
-                 order.ConflictingAllergens.Any()))
+            if (newStatus == OrderStatus.ReadyForKitchen && (order.Status != OrderStatus.Pending || order.ConflictingAllergens.Any()))
             {
                 throw new InvalidOperationException(
                     "Only safe Pending orders may move to ReadyForKitchen.");
             }
 
-            if (newStatus == OrderStatus.Cancelled &&
-                (order.Status == OrderStatus.Completed ||
-                 order.Status == OrderStatus.Cancelled))
+            if (newStatus == OrderStatus.Cancelled && (order.Status == OrderStatus.Completed || order.Status == OrderStatus.Cancelled))
             {
                 throw new InvalidOperationException(
                     "Completed or Cancelled orders cannot be cancelled again.");
             }
 
-            if (order.Status == OrderStatus.Completed ||
-                order.Status == OrderStatus.Cancelled)
+            if (order.Status == OrderStatus.Completed || order.Status == OrderStatus.Cancelled)
             {
                 throw new InvalidOperationException(
                     "Completed or Cancelled orders are no longer active FOH work.");

@@ -29,5 +29,9 @@ namespace AllergySystem.Models
         public OrderStatus Status { get; set; } = OrderStatus.Pending;
 
         public List<Allergen> ConflictingAllergens { get; set; } = new();
+
+        // Indicates whether kitchen staff have explicitly acknowledged the allergen warning.
+        // Defaults to false for newly created orders.
+        public bool KitchenAllergyAcknowledged { get; set; } = false;
     }
 }

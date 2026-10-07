@@ -200,10 +200,11 @@ namespace AllergySystem.Tests
         public void GetActiveOrders_ExcludesCompletedAndCancelledOrders()
         {
             // Arrange
-            var service = CreateService(
-                out var orderStore,
-                out var cartService,
-                out var profileStore);
+            var service = CreateService(out var orderStore, out var cartService, out var profileStore);
+
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+            var kitchenService = new KitchenOrderService(orderStore, profileStore, new AllergyValidationService(), auditService);
 
             var profile = profileStore.GetProfile(10);
             profile.Allergens.Clear();
@@ -214,7 +215,10 @@ namespace AllergySystem.Tests
 
             cartService.AddItem(11, 5);
             var completed = service.CreateOrderFromCart(11);
-            service.UpdateOrderStatus(completed.Id, OrderStatus.Completed);
+
+            service.SendToKitchen(completed.Id);
+            kitchenService.StartPreparation(completed.Id);
+            kitchenService.CompleteOrder(completed.Id);
 
             cartService.AddItem(12, 5);
             var cancelled = service.CreateOrderFromCart(12);
@@ -225,7 +229,9 @@ namespace AllergySystem.Tests
 
             // Assert
             Assert.Contains(pending.Id, activeOrders.Select(order => order.Id).ToList());
+
             Assert.DoesNotContain(completed.Id, activeOrders.Select(order => order.Id).ToList());
+
             Assert.DoesNotContain(cancelled.Id, activeOrders.Select(order => order.Id).ToList());
         }
 
@@ -233,10 +239,7 @@ namespace AllergySystem.Tests
         public void SendToKitchen_SafePendingOrder_SetsReadyForKitchen()
         {
             // Arrange
-            var service = CreateService(
-                out var orderStore,
-                out var cartService,
-                out var profileStore);
+            var service = CreateService(out var orderStore, out var cartService, out var profileStore);
 
             var profile = profileStore.GetProfile(13);
             profile.Allergens.Clear();
@@ -248,9 +251,7 @@ namespace AllergySystem.Tests
             service.SendToKitchen(created.Id);
 
             // Assert
-            Assert.AreEqual(
-                OrderStatus.ReadyForKitchen,
-                orderStore.GetOrder(created.Id)!.Status);
+            Assert.AreEqual(OrderStatus.ReadyForKitchen, orderStore.GetOrder(created.Id)!.Status);
         }
 
         [TestMethod]
@@ -291,6 +292,7 @@ namespace AllergySystem.Tests
                     Name = "Milk"
                 }
             };
+
             profileStore.SaveProfile(profile);
 
             var created = service.CreateOrderFromCart(14);
@@ -339,10 +341,21 @@ namespace AllergySystem.Tests
             var profile = profileStore.GetProfile(17);
             profile.Allergens.Clear();
             profileStore.SaveProfile(profile);
+            
             cartService.AddItem(17, 5);
             var created = service.CreateOrderFromCart(17);
-            service.UpdateOrderStatus(created.Id, OrderStatus.ReadyForKitchen);
-            service.UpdateOrderStatus(created.Id, OrderStatus.InPreparation);
+            
+            service.SendToKitchen(created.Id);
+
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+            var kitchenService = new KitchenOrderService(
+                orderStore,
+                profileStore,
+                new AllergyValidationService(),
+                auditService);
+
+            kitchenService.StartPreparation(created.Id);
 
             // Act
             service.CancelOrder(created.Id);
@@ -505,7 +518,19 @@ namespace AllergySystem.Tests
             cartService.AddItem(customerId, 5);
 
             var created = service.CreateOrderFromCart(customerId);
-            service.UpdateOrderStatus(created.Id, OrderStatus.Completed);
+
+            service.SendToKitchen(created.Id);
+
+            var auditStore = new InMemoryAuditStore();
+            var auditService = new AuditService(auditStore);
+            var kitchenService = new KitchenOrderService(
+                orderStore,
+                profileStore,
+                new AllergyValidationService(),
+                auditService);
+
+            kitchenService.StartPreparation(created.Id);
+            kitchenService.CompleteOrder(created.Id);
 
             // Act & Assert
             Assert.ThrowsExactly<InvalidOperationException>(
