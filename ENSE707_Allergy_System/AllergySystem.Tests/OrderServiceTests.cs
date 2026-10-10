@@ -20,6 +20,7 @@ namespace AllergySystem.Tests
             var allergenCatalog = new AllergenCatalogService();
             var menuCatalog = new MenuCatalogService(allergenCatalog);
             var validationService = new AllergyValidationService();
+            var dietaryService = new DietaryCompatibilityService();
 
             cartService = new CartService(
                 cartStore,
@@ -31,7 +32,192 @@ namespace AllergySystem.Tests
                 orderStore,
                 cartService,
                 profileStore,
-                validationService);
+                validationService,
+                dietaryService);
+        }
+
+        [TestMethod]
+        public void CreateOrderFromCart_SafeOrder_NoAllergens_NoDietaryWarnings_SucceedsAndClearsCart()
+        {
+            // Arrange
+            var service = CreateService(out var orderStore, out var cartService, out var profileStore);
+            var customerId = 20;
+
+            var profile = profileStore.GetProfile(customerId);
+            profile.Allergens.Clear();
+            profile.DietaryRestrictions.Clear();
+            profileStore.SaveProfile(profile);
+
+            // Use an item that is safe and will not trigger dietary warnings when profile has no restrictions.
+            cartService.AddItem(customerId, 5);
+
+            // Act
+            var created = service.CreateOrderFromCart(customerId);
+
+            // Assert
+            Assert.AreEqual(OrderStatus.Pending, created.Status);
+            Assert.HasCount(0, created.ConflictingAllergens);
+
+            var persisted = orderStore.GetOrder(created.Id);
+            Assert.IsNotNull(persisted);
+            Assert.AreEqual(created.Id, persisted.Id);
+
+            var cart = cartService.GetCart(customerId);
+            Assert.HasCount(0, cart.Items);
+        }
+
+        [TestMethod]
+        public void CreateOrderFromCart_DietaryWarningNotConfirmed_ThrowsAndDoesNotSaveOrder_CartUnchanged()
+        {
+            // Arrange
+            var service = CreateService(out var orderStore, out var cartService, out var profileStore);
+            var customerId = 21;
+
+            var profile = profileStore.GetProfile(customerId);
+            profile.Allergens.Clear();
+            profile.DietaryRestrictions = new List<DietaryRestriction>
+            {
+                new DietaryRestriction { Id = 2, Name = "Vegan" } // deterministic: Vegan id = 2 in MenuCatalogService
+            };
+            profileStore.SaveProfile(profile);
+
+            // Creamy Pasta (Id = 4) is labelled Vegetarian (Id = 1) but not Vegan => should produce a dietary warning
+            cartService.AddItem(customerId, 4);
+
+            // Act & Assert - MSTest in this project exposes ThrowsExactly but not ThrowsException,
+            // so use try/catch to assert the expected exception and inspect its contents.
+            DietaryConfirmationRequiredException ex = null;
+            try
+            {
+                service.CreateOrderFromCart(customerId);
+                Assert.Fail("Expected DietaryConfirmationRequiredException was not thrown.");
+            }
+            catch (DietaryConfirmationRequiredException dex)
+            {
+                ex = dex;
+            }
+
+            Assert.IsNotNull(ex);
+            Assert.IsNotNull(ex.Warnings);
+            Assert.AreEqual(1, ex.Warnings.Count);
+            Assert.AreEqual(2, ex.Warnings[0].Id); // Expect Vegan id
+
+            // No order must have been saved for this customer
+            Assert.HasCount(0, orderStore.GetOrdersForCustomer(customerId));
+
+            // Cart must remain unchanged so the user can decide
+            var cart = cartService.GetCart(customerId);
+            Assert.HasCount(1, cart.Items);
+            Assert.AreEqual(4, cart.Items[0].MenuItem.Id);
+        }
+
+        [TestMethod]
+        public void CreateOrderFromCart_DietaryWarningConfirmed_CreatesPendingOrderAndClearsCart()
+        {
+            // Arrange
+            var service = CreateService(out var orderStore, out var cartService, out var profileStore);
+            var customerId = 22;
+
+            var profile = profileStore.GetProfile(customerId);
+            profile.Allergens.Clear();
+            profile.DietaryRestrictions = new List<DietaryRestriction>
+            {
+                new DietaryRestriction { Id = 2, Name = "Vegan" }
+            };
+            profileStore.SaveProfile(profile);
+
+            cartService.AddItem(customerId, 4); // Creamy Pasta lacks Vegan label -> warning would be produced
+
+            // Act
+            var created = service.CreateOrderFromCart(customerId, dietaryWarningsConfirmed: true);
+
+            // Assert
+            Assert.AreEqual(OrderStatus.Pending, created.Status);
+            Assert.HasCount(0, created.ConflictingAllergens);
+
+            var persisted = orderStore.GetOrder(created.Id);
+            Assert.IsNotNull(persisted);
+
+            var cart = cartService.GetCart(customerId);
+            Assert.HasCount(0, cart.Items);
+        }
+
+        [TestMethod]
+        public void CreateOrderFromCart_AllergyConflictOnly_CreatesPendingAllergyConfirmation()
+        {
+            // Arrange
+            var service = CreateService(out var orderStore, out var cartService, out var profileStore);
+            var customerId = 23;
+            var profile = profileStore.GetProfile(customerId);
+            // Start with a safe profile so the item can be added to the cart.
+            profile.Allergens.Clear();
+            profile.DietaryRestrictions.Clear();
+            profileStore.SaveProfile(profile);
+
+            // Creamy Pasta (Id = 4) initially safe relative to this empty profile
+            cartService.AddItem(customerId, 4);
+
+            // Customer updates their allergy profile after the item is already in the cart.
+            profile.Allergens = new List<Allergen>
+            {
+                new Allergen { Id = 3, Name = "Milk" } // Cream Sauce uses allergen id 3
+            };
+            profileStore.SaveProfile(profile);
+
+            // Act
+            var created = service.CreateOrderFromCart(customerId);
+
+            // Assert
+            Assert.AreEqual(OrderStatus.PendingAllergyConfirmation, created.Status);
+            Assert.Contains(3, created.ConflictingAllergens.Select(a => a.Id).ToList());
+
+            var persisted = orderStore.GetOrder(created.Id);
+            Assert.IsNotNull(persisted);
+
+            var cart = cartService.GetCart(customerId);
+            Assert.HasCount(0, cart.Items);
+        }
+
+        [TestMethod]
+        public void CreateOrderFromCart_AllergyAndDietaryWarning_AllergyTakesPrecedence_UnconfirmedDietaryWarning()
+        {
+            // Arrange
+            var service = CreateService(out var orderStore, out var cartService, out var profileStore);
+            var customerId = 24;
+
+            var profile = profileStore.GetProfile(customerId);
+            // Start with a safe profile so the item can be added to the cart.
+            profile.Allergens.Clear();
+            profile.DietaryRestrictions.Clear();
+            profileStore.SaveProfile(profile);
+
+            // Add the item first while the profile is safe
+            cartService.AddItem(customerId, 4); // Creamy Pasta
+
+            // After the item is in the cart, the customer updates their profile to include both an allergen
+            // and a dietary restriction that would otherwise generate a warning.
+            profile.Allergens = new List<Allergen>
+            {
+                new Allergen { Id = 3, Name = "Milk" }
+            };
+            profile.DietaryRestrictions = new List<DietaryRestriction>
+            {
+                new DietaryRestriction { Id = 2, Name = "Vegan" } // will produce a dietary warning for Creamy Pasta
+            };
+            profileStore.SaveProfile(profile);
+
+            // Act: do NOT confirm dietary warnings; allergy should take precedence and suppress dietary exception
+            var created = service.CreateOrderFromCart(customerId);
+
+            // Assert: allergy workflow must take precedence
+            Assert.AreEqual(OrderStatus.PendingAllergyConfirmation, created.Status);
+            Assert.Contains(3, created.ConflictingAllergens.Select(a => a.Id).ToList());
+
+            var persisted = orderStore.GetOrder(created.Id);
+            Assert.IsNotNull(persisted);
+
+            var cart = cartService.GetCart(customerId);
+            Assert.HasCount(0, cart.Items);
         }
 
         [TestMethod]

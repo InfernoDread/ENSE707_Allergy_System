@@ -25,12 +25,12 @@ namespace AllergySystem.Tests
                 menuCatalog,
                 profileStore,
                 validationService);
-
             var orderService = new OrderService(
                 orderStore,
                 cartService,
                 profileStore,
-                validationService);
+                validationService,
+                new DietaryCompatibilityService());
 
             var auditStore = new InMemoryAuditStore();
             var auditService = new AuditService(auditStore);

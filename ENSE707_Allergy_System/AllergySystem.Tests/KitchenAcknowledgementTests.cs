@@ -30,7 +30,8 @@ namespace AllergySystem.Tests
                 orderStore,
                 cartService,
                 profileStore,
-                validationService);
+                validationService,
+                new DietaryCompatibilityService());
 
             var auditStore = new InMemoryAuditStore();
             var auditService = new AuditService(auditStore);

@@ -19,6 +19,7 @@ namespace AllergySystem.Tests
             var allergenCatalog = new AllergenCatalogService();
             var menuCatalog = new MenuCatalogService(allergenCatalog);
             var validationService = new AllergyValidationService();
+            var dietaryService = new DietaryCompatibilityService();
 
             var cartService = new CartService(
                 cartStore,
@@ -30,7 +31,8 @@ namespace AllergySystem.Tests
                 orderStore,
                 cartService,
                 profileStore,
-                validationService);
+                validationService,
+                dietaryService);
 
             return (orderService, orderStore, cartService, profileStore, menuCatalog);
         }
@@ -214,6 +216,102 @@ namespace AllergySystem.Tests
                     Assert.AreEqual(sourceAll[j].Name, orderAll[j].Name);
                 }
             }
+        }
+
+        [TestMethod]
+        public void OrderSnapshot_DietaryLabels_AreDeepCopied()
+        {
+            var (orderSvc, orderStore, cartSvc, profileStore, menuCatalog) =
+                CreateServices();
+
+            var customerId = 405;
+
+            var profile = profileStore.GetProfile(customerId);
+            profile.Allergens.Clear();
+            profileStore.SaveProfile(profile);
+
+            // Garden Salad has several dietary labels.
+            cartSvc.AddItem(customerId, 5);
+
+            var cart = cartSvc.GetCart(customerId);
+            var cartMenuItem = cart.Items[0].MenuItem;
+
+            Assert.IsNotEmpty(cartMenuItem.DietaryLabels);
+
+            var createdOrder = orderSvc.CreateOrderFromCart(customerId);
+            var persistedOrder = orderStore.GetOrder(createdOrder.Id)!;
+
+            var orderMenuItem = persistedOrder.Items[0].MenuItem;
+
+            // Values must be preserved.
+            CollectionAssert.AreEquivalent(
+                cartMenuItem.DietaryLabels.Select(label => label.Id).ToArray(),
+                orderMenuItem.DietaryLabels.Select(label => label.Id).ToArray());
+
+            // But the order must own independent instances.
+            Assert.AreNotSame(
+                cartMenuItem.DietaryLabels,
+                orderMenuItem.DietaryLabels);
+
+            Assert.AreNotSame(
+                cartMenuItem.DietaryLabels[0],
+                orderMenuItem.DietaryLabels[0]);
+
+            var originalOrderLabelName = orderMenuItem.DietaryLabels[0].Name;
+
+            // Mutating the original cart/menu object must not alter the order snapshot.
+            cartMenuItem.DietaryLabels[0].Name = "CHANGED";
+
+            Assert.AreEqual(
+                originalOrderLabelName,
+                orderMenuItem.DietaryLabels[0].Name);
+        }
+
+        [TestMethod]
+        public void OrderSnapshot_ConflictingAllergens_AreDeepCopied()
+        {
+            var (orderSvc, orderStore, cartSvc, profileStore, menuCatalog) =
+                CreateServices();
+
+            var customerId = 460;
+
+            // Start with an allergy-safe profile.
+            var profile = profileStore.GetProfile(customerId);
+            profile.Allergens.Clear();
+            profileStore.SaveProfile(profile);
+
+            // Add Creamy Pasta (Id = 4) to the cart.
+            cartSvc.AddItem(customerId, 4);
+
+            // Retrieve the actual cart and capture the allergen instance from the cart's menu item.
+            var cart = cartSvc.GetCart(customerId);
+            var cartMenuItem = cart.Items.First(i => i.MenuItem.Id == 4).MenuItem;
+            var cartAllergen = cartMenuItem.Ingredients
+                .SelectMany(i => i.Allergens)
+                .First(a => a.Id == 3); // Milk
+
+            // Now update the customer's profile to include Milk so the order will detect a conflict.
+            profile = profileStore.GetProfile(customerId);
+            profile.Allergens = new List<Allergen>
+            {
+                new Allergen { Id = 3, Name = cartAllergen.Name }
+            };
+            profileStore.SaveProfile(profile);
+
+            // Create the order which should record the conflicting allergen
+            var created = orderSvc.CreateOrderFromCart(customerId);
+            var persisted = orderStore.GetOrder(created.Id)!;
+
+            var originalName = persisted.ConflictingAllergens.First(a => a.Id == 3).Name;
+
+            // Mutate the captured cart allergen instance after order creation
+            cartAllergen.Name = "CHANGED-NAME";
+
+            // Reload the persisted order and verify its recorded conflicting allergen name did not change
+            var reloaded = orderStore.GetOrder(created.Id)!;
+            var persistedName = reloaded.ConflictingAllergens.First(a => a.Id == 3).Name;
+
+            Assert.AreEqual(originalName, persistedName);
         }
     }
 }
