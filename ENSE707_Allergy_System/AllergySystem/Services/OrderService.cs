@@ -12,26 +12,28 @@ namespace AllergySystem.Services
         private readonly CartService _cartService;
         private readonly InMemoryAllergyProfileStore _profileStore;
         private readonly AllergyValidationService _validationService;
+        private readonly DietaryCompatibilityService _dietaryCompatibilityService;
 
         // Creates the service with the stores and services needed to process customer orders.
-        public OrderService( InMemoryOrderStore orderStore, CartService cartService, InMemoryAllergyProfileStore profileStore, AllergyValidationService validationService)
+        public OrderService( InMemoryOrderStore orderStore, CartService cartService, InMemoryAllergyProfileStore profileStore, 
+            AllergyValidationService validationService, DietaryCompatibilityService dietaryCompatibilityService)
         {
             _orderStore = orderStore;
             _cartService = cartService;
             _profileStore = profileStore;
             _validationService = validationService;
+            _dietaryCompatibilityService = dietaryCompatibilityService;
         }
 
         // Creates a new order containing all items currently in the customer's cart.
         // Every cart item is revalidated against the customer's current allergy profile before the order is saved.
-        public Order CreateOrderFromCart(int customerId)
+        public Order CreateOrderFromCart(int customerId, bool dietaryWarningsConfirmed = false)
         {
             var cart = _cartService.GetCart(customerId);
 
             if (cart.Items.Count == 0)
             {
-                throw new InvalidOperationException(
-                    "Cannot create an order from an empty cart.");
+                throw new InvalidOperationException("Cannot create an order from an empty cart.");
             }
 
             var profile = _profileStore.GetProfile(customerId);
@@ -44,6 +46,24 @@ namespace AllergySystem.Services
                 .GroupBy(allergen => allergen.Id)
                 .Select(group => group.First())
                 .ToList();
+            
+            var dietaryWarnings = cart.Items
+                .SelectMany(item =>
+                    _dietaryCompatibilityService.FindDietaryWarnings(
+                        item.MenuItem,
+                        profile.DietaryRestrictions))
+                .GroupBy(restriction => restriction.Id)
+                .Select(group => group.First())
+                .ToList();
+
+            // Dietary restrictions are advisory rather than hard safety blocks.
+            // They require explicit confirmation only when there is no declared allergen conflict. Allergen safety always takes precedence.
+            if (!conflicts.Any() &&
+                dietaryWarnings.Any() &&
+                !dietaryWarningsConfirmed)
+            {
+                throw new DietaryConfirmationRequiredException(dietaryWarnings);
+            }
 
             var order = new Order
             {
@@ -59,6 +79,11 @@ namespace AllergySystem.Services
                         Name = item.MenuItem.Name,
                         Description = item.MenuItem.Description,
 
+                        DietaryLabels = item.MenuItem.DietaryLabels.Select(label => new DietaryRestriction
+                        {
+                            Id = label.Id,
+                            Name = label.Name
+                        }).ToList(),
                         Ingredients = item.MenuItem.Ingredients.Select(ingredient => new Ingredient
                         {
                             Id = ingredient.Id,
@@ -75,7 +100,13 @@ namespace AllergySystem.Services
                 }).ToList(),
 
                 CreatedAt = DateTime.UtcNow,
-                ConflictingAllergens = conflicts,
+                ConflictingAllergens = conflicts
+                    .Select(allergen => new Allergen
+                    {
+                        Id = allergen.Id,
+                        Name = allergen.Name
+                    })
+                    .ToList(),
 
                 Status = conflicts.Any()
                     ? OrderStatus.PendingAllergyConfirmation

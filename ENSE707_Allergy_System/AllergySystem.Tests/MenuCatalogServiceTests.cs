@@ -184,5 +184,41 @@ namespace AllergySystem.Tests
             // Assert
             Assert.HasCount(ingredients.Count, uniqueIds);
         }
+
+        [TestMethod]
+        public void GetMenuItems_HaveExpectedDietaryLabels()
+        {
+            // Arrange
+            var allergenService = new AllergenCatalogService();
+            var service = new MenuCatalogService(allergenService);
+
+            // Act
+            var menuItems = service.GetMenuItems();
+
+            var burger = menuItems.Single(m => m.Id == 1);
+            var peanutNoodles = menuItems.Single(m => m.Id == 2);
+            var fishAndChips = menuItems.Single(m => m.Id == 3);
+            var creamyPasta = menuItems.Single(m => m.Id == 4);
+            var gardenSalad = menuItems.Single(m => m.Id == 5);
+
+            // Assert
+            Assert.IsEmpty(burger.DietaryLabels);
+
+            CollectionAssert.AreEquivalent(
+                new[] { 4 },
+                peanutNoodles.DietaryLabels.Select(label => label.Id).ToArray());
+
+            CollectionAssert.AreEquivalent(
+                new[] { 4 },
+                fishAndChips.DietaryLabels.Select(label => label.Id).ToArray());
+
+            CollectionAssert.AreEquivalent(
+                new[] { 1 },
+                creamyPasta.DietaryLabels.Select(label => label.Id).ToArray());
+
+            CollectionAssert.AreEquivalent(
+                new[] { 1, 2, 3, 4 },
+                gardenSalad.DietaryLabels.Select(label => label.Id).ToArray());
+        }
     }
 }

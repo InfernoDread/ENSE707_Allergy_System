@@ -186,7 +186,7 @@ namespace AllergySystem.Tests
             var validationService = new AllergyValidationService();
 
             var cartService = new CartService(cartStore, menuCatalog, profileStore, validationService);
-            var orderService = new OrderService(orderStore, cartService, profileStore, validationService);
+            var orderService = new OrderService(orderStore, cartService, profileStore, validationService, new DietaryCompatibilityService());
             var auditStore = new InMemoryAuditStore();
             var auditService = new AuditService(auditStore);
             var kitchenService = new KitchenOrderService(orderStore, profileStore, validationService, auditService);
@@ -224,7 +224,7 @@ namespace AllergySystem.Tests
             var validationService = new AllergyValidationService();
 
             var cartService = new CartService(cartStore, menuCatalog, profileStore, validationService);
-            var orderService = new OrderService(orderStore, cartService, profileStore, validationService);
+            var orderService = new OrderService(orderStore, cartService, profileStore, validationService, new DietaryCompatibilityService());
             var auditStore = new InMemoryAuditStore();
             var auditService = new AuditService(auditStore);
             var kitchenService = new KitchenOrderService(orderStore, profileStore, validationService, auditService);
@@ -272,7 +272,7 @@ namespace AllergySystem.Tests
             var validationService = new AllergyValidationService();
 
             var cartService = new CartService(cartStore, menuCatalog, profileStore, validationService);
-            var orderService = new OrderService(orderStore, cartService, profileStore, validationService);
+            var orderService = new OrderService(orderStore, cartService, profileStore, validationService, new DietaryCompatibilityService());
             var auditStore = new InMemoryAuditStore();
             var auditService = new AuditService(auditStore);
             var kitchenService = new KitchenOrderService(orderStore, profileStore, validationService, auditService);
@@ -429,7 +429,7 @@ namespace AllergySystem.Tests
             var validationService = new AllergyValidationService();
 
             var cartService = new CartService(cartStore, menuCatalog, profileStore, validationService);
-            var orderService = new OrderService(orderStore, cartService, profileStore, validationService);
+            var orderService = new OrderService(orderStore, cartService, profileStore, validationService, new DietaryCompatibilityService());
 
             var customerId = 9400;
             var profile = profileStore.GetProfile(customerId);

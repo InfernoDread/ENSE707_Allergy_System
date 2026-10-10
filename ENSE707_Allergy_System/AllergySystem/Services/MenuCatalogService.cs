@@ -20,6 +20,14 @@ namespace AllergySystem.Services
         {
             var allergens = _allergenCatalogService.GetAllergens().ToDictionary(a => a.Id);
 
+            var dietaryLabels = new Dictionary<int, DietaryRestriction>
+            {
+                { 1, new DietaryRestriction { Id = 1, Name = "Vegetarian" } },
+                { 2, new DietaryRestriction { Id = 2, Name = "Vegan" } },
+                { 3, new DietaryRestriction { Id = 3, Name = "Gluten-Free" } },
+                { 4, new DietaryRestriction { Id = 4, Name = "Dairy-Free" } }
+            };
+
             return new List<MenuItem>
             {
                 new MenuItem
@@ -71,6 +79,10 @@ namespace AllergySystem.Services
                     Id = 2,
                     Name = "Peanut Chicken Noodles",
                     Description = "Chicken and noodles served with a peanut and soy sauce.",
+                    DietaryLabels = new List<DietaryRestriction>
+                    {
+                        dietaryLabels[4]
+                    },
                     Ingredients = new List<Ingredient>
                     {
                         new Ingredient
@@ -106,6 +118,10 @@ namespace AllergySystem.Services
                     Id = 3,
                     Name = "Fish and Chips",
                     Description = "Battered fish served with chips.",
+                    DietaryLabels = new List<DietaryRestriction>
+                    {
+                        dietaryLabels[4]
+                    },
                     Ingredients = new List<Ingredient>
                     {
                         new Ingredient
@@ -131,6 +147,10 @@ namespace AllergySystem.Services
                     Id = 4,
                     Name = "Creamy Pasta",
                     Description = "Pasta served in a creamy cheese sauce.",
+                    DietaryLabels = new List<DietaryRestriction>
+                    {
+                        dietaryLabels[1]
+                    },
                     Ingredients = new List<Ingredient>
                     {
                         new Ingredient
@@ -160,6 +180,13 @@ namespace AllergySystem.Services
                     Id = 5,
                     Name = "Garden Salad",
                     Description = "Fresh lettuce, tomato and cucumber with olive oil.",
+                    DietaryLabels = new List<DietaryRestriction>
+                    {
+                        dietaryLabels[1],
+                        dietaryLabels[2],
+                        dietaryLabels[3],
+                        dietaryLabels[4]
+                    },
                     Ingredients = new List<Ingredient>
                     {
                         new Ingredient

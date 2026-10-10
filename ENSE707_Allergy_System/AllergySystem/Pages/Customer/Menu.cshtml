@@ -12,6 +12,7 @@
 
             <p class="text-muted mb-0">
                 Add menu items to your cart. Your saved allergy profile will be checked automatically.
+                Dietary compatibility labels are provided as advisory information.
             </p>
         </div>
 
@@ -35,6 +36,28 @@
                             <p class="card-text">
                                 @item.Description
                             </p>
+
+                            @if (item.DietaryLabels.Count > 0)
+                            {
+                                <div class="mb-3">
+                                    <strong>Dietary compatibility:</strong>
+                                    <div class="mt-1">
+                                        @foreach (var label in item.DietaryLabels)
+                                        {
+                                            <span class="badge bg-success me-1">
+                                                @label.Name
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted">
+                                    <strong>Dietary compatibility:</strong>
+                                    No compatibility labels declared.
+                                </p>
+                            }
 
                             <p>
                                 <strong>Ingredients:</strong>

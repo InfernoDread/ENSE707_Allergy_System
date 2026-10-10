@@ -77,13 +77,66 @@
                 Continue Shopping
             </a>
 
-            <form method="post"
-                  asp-page-handler="PlaceOrder">
-                <button type="submit"
-                        class="btn btn-success">
-                    Place Order
-                </button>
-            </form>
+            @if (Model.DietaryWarnings.Count == 0)
+            {
+                <form method="post"
+                      asp-page-handler="PlaceOrder">
+                    <button type="submit"
+                            class="btn btn-success">
+                        Place Order
+                    </button>
+                </form>
+            }
+        </div>
+    }
+
+    @if (Model.DietaryWarnings.Count > 0)
+    {
+        <div class="alert alert-warning mt-4"
+             role="alert">
+
+            <h4 class="alert-heading">
+                Dietary Preference Advisory
+            </h4>
+
+            <p>
+                One or more items in your cart are not explicitly labelled
+                as compatible with your saved dietary preferences.
+            </p>
+
+            <p>
+                <strong>Dietary warnings:</strong>
+                @string.Join(
+                    ", ",
+                    Model.DietaryWarnings.Select(r => r.Name))
+            </p>
+
+            <p>
+                This is an advisory warning rather than an allergen safety conflict.
+                You may continue with the order if you choose.
+            </p>
+
+            <hr />
+
+            <div class="d-flex gap-2">
+                <form method="post"
+                      asp-page-handler="PlaceOrder">
+
+                    <input type="hidden"
+                           name="dietaryWarningsConfirmed"
+                           value="true" />
+
+                    <button type="submit"
+                            class="btn btn-warning">
+                        Continue Anyway
+                    </button>
+                </form>
+
+                <a asp-page="/Customer/Menu"
+                   class="btn btn-outline-secondary">
+                    Modify Order
+                </a>
+            </div>
         </div>
     }
 

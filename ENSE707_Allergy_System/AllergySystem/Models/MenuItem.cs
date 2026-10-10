@@ -8,5 +8,6 @@
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public List<Ingredient> Ingredients { get; set; } = new();
+        public List<DietaryRestriction> DietaryLabels { get; set; } = new();
     }
 }

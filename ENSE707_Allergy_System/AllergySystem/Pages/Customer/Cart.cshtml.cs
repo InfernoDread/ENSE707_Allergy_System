@@ -30,6 +30,8 @@ namespace AllergySystem.Pages.Customer
 
         public List<MenuItem> ConflictingMenuItems { get; private set; } = new();
 
+        public List<DietaryRestriction> DietaryWarnings { get; private set; } = new();
+
         // Loads the customer's current cart.
         public void OnGet()
         {
@@ -56,27 +58,35 @@ namespace AllergySystem.Pages.Customer
         }
 
         // Creates one order containing all items currently in the customer's cart.
-        // If checkout detects an allergy conflict, the affected menu items are identified so a prominent warning can be displayed to the customer.
-        public void OnPostPlaceOrder()
+        // Dietary warnings require explicit customer confirmation, while allergen conflicts continue through the existing safety workflow.
+        public void OnPostPlaceOrder(bool dietaryWarningsConfirmed = false)
         {
-            CreatedOrder = _orderService.CreateOrderFromCart(
-                CurrentCustomerId);
-
-            if (CreatedOrder.ConflictingAllergens.Count > 0)
+            try
             {
-                var conflictingAllergenIds = CreatedOrder
-                    .ConflictingAllergens
-                    .Select(a => a.Id)
-                    .ToHashSet();
+                CreatedOrder = _orderService.CreateOrderFromCart(
+                    CurrentCustomerId,
+                    dietaryWarningsConfirmed);
 
-                ConflictingMenuItems = CreatedOrder.Items
-                    .Where(item =>
-                        item.MenuItem.Ingredients
-                            .SelectMany(i => i.Allergens)
-                            .Any(a => conflictingAllergenIds.Contains(a.Id)))
-                    .Select(item => item.MenuItem)
-                    .DistinctBy(item => item.Id)
-                    .ToList();
+                if (CreatedOrder.ConflictingAllergens.Count > 0)
+                {
+                    var conflictingAllergenIds = CreatedOrder
+                        .ConflictingAllergens
+                        .Select(a => a.Id)
+                        .ToHashSet();
+
+                    ConflictingMenuItems = CreatedOrder.Items
+                        .Where(item =>
+                            item.MenuItem.Ingredients
+                                .SelectMany(i => i.Allergens)
+                                .Any(a => conflictingAllergenIds.Contains(a.Id)))
+                        .Select(item => item.MenuItem)
+                        .DistinctBy(item => item.Id)
+                        .ToList();
+                }
+            }
+            catch (DietaryConfirmationRequiredException exception)
+            {
+                DietaryWarnings = exception.Warnings.ToList();
             }
 
             LoadCart();

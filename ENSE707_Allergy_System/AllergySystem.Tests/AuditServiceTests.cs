@@ -26,11 +26,13 @@ namespace AllergySystem.Tests
                 profileStore,
                 validationService);
 
+            var dietaryService = new DietaryCompatibilityService();
             var orderService = new OrderService(
                 orderStore,
                 cartService,
                 profileStore,
-                validationService);
+                validationService,
+                dietaryService);
 
             return (orderService, orderStore, cartService, profileStore);
         }
