@@ -8,13 +8,14 @@ namespace AllergySystem.Pages.Customer
     // that are not currently available in the system.
     public class RecommendDietaryRestrictionModel : PageModel
     {
-        private const int DemoCustomerId = 1;
-
+        private readonly CurrentUserContext _currentUser;
         private readonly DietaryRestrictionRecommendationService _recommendationService;
 
         public RecommendDietaryRestrictionModel(
+            CurrentUserContext currentUser,
             DietaryRestrictionRecommendationService recommendationService)
         {
+            _currentUser = currentUser;
             _recommendationService = recommendationService;
         }
 
@@ -40,7 +41,7 @@ namespace AllergySystem.Pages.Customer
             }
 
             _recommendationService.SubmitRecommendation(
-                DemoCustomerId,
+                _currentUser.CustomerId,
                 RestrictionName);
 
             SuccessMessage =

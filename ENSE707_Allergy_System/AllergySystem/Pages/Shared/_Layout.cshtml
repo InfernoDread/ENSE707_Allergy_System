@@ -26,21 +26,59 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Customer/AllergyProfile">My Allergy Profile</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Customer/Menu">Menu</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Staff/FrontOfHouseOrders">Front Of House Orders</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Staff/KitchenOrders">Kitchen Orders</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Admin/AuditHistory">Audit History</a>
-                        </li>
+                        @if (User.IsInRole("Customer"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Customer/AllergyProfile">My Allergy Profile</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Customer/Menu">Menu</a>
+                            </li>
+                        }
+                        @if (User.IsInRole("FrontOfHouse"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Staff/FrontOfHouseOrders">Front Of House Orders</a>
+                            </li>
+                        }
+                        @if (User.IsInRole("Kitchen"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Staff/KitchenOrders">Kitchen Orders</a>
+                            </li>
+                        }
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Admin/QualityDashboard">Quality Dashboard</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Admin/MenuAllergens">Menu Allergens</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Admin/AllergenRecommendations">Recommendations</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Admin/AuditHistory">Audit History</a>
+                            </li>
+                        }
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link text-muted">@User.Identity.Name</span>
+                            </li>
+                            <li class="nav-item">
+                                <form method="post" asp-page="/Account/Logout">
+                                    <button type="submit" class="btn btn-link nav-link text-dark">Sign Out</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Account/Login">Sign In</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

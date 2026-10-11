@@ -9,18 +9,18 @@ namespace AllergySystem.Pages.Customer
     // It displays available menu items and allows customers to add safe items to their cart.
     public class MenuModel : PageModel
     {
-        // Temporary customer ID used while the prototype has no authentication system.
-        private const int CurrentCustomerId = 1;
-
+        private readonly CurrentUserContext _currentUser;
         private readonly MenuCatalogService _menuCatalogService;
         private readonly CartService _cartService;
 
         // Creates the page model with the services needed to load menu items
         // and add selected items to the customer's cart.
         public MenuModel(
+            CurrentUserContext currentUser,
             MenuCatalogService menuCatalogService,
             CartService cartService)
         {
+            _currentUser = currentUser;
             _menuCatalogService = menuCatalogService;
             _cartService = cartService;
         }
@@ -60,7 +60,7 @@ namespace AllergySystem.Pages.Customer
             }
 
             Conflicts = _cartService.AddItem(
-                CurrentCustomerId,
+                _currentUser.CustomerId,
                 SelectedMenuItemId);
 
             ItemAddedToCart = Conflicts.Count == 0;
@@ -79,7 +79,7 @@ namespace AllergySystem.Pages.Customer
         // including item quantities.
         private void LoadCartCount()
         {
-            var cart = _cartService.GetCart(CurrentCustomerId);
+            var cart = _cartService.GetCart(_currentUser.CustomerId);
 
             CartItemCount = cart.Items.Sum(i => i.Quantity);
         }

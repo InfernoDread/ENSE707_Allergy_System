@@ -53,5 +53,54 @@ namespace AllergySystem.Tests
             Assert.IsNotNull(model.Entries);
             Assert.AreEqual(0, model.Entries.Count);
         }
+
+        [TestMethod]
+        public void OnGet_WithRoleAndActionFilters_PreservesNewestFirstOrdering()
+        {
+            var store = new InMemoryAuditStore();
+            var now = DateTime.UtcNow;
+
+            store.Add(new AuditEntry
+            {
+                TimestampUtc = now.AddMinutes(-2),
+                ActorRole = "Admin",
+                Action = "UpdateIngredientAllergen",
+                EntityType = "IngredientAllergenAssociation"
+            });
+            store.Add(new AuditEntry
+            {
+                TimestampUtc = now.AddMinutes(-1),
+                ActorRole = "Admin",
+                Action = "UpdateIngredientAllergen",
+                EntityType = "IngredientAllergenAssociation"
+            });
+            store.Add(new AuditEntry
+            {
+                TimestampUtc = now,
+                ActorRole = "Kitchen",
+                Action = "StartPreparation",
+                EntityType = "Order"
+            });
+            store.Add(new AuditEntry
+            {
+                TimestampUtc = now.AddMinutes(1),
+                ActorRole = "Admin",
+                Action = "LoginSucceeded",
+                EntityType = "Authentication"
+            });
+
+            var model = new AuditHistoryModel(store)
+            {
+                ActorRoleFilter = "admin",
+                ActionFilter = "updateingredientallergen"
+            };
+
+            model.OnGet();
+
+            Assert.HasCount(2, model.Entries);
+            CollectionAssert.AreEqual(new[] { 2, 1 }, model.Entries.Select(entry => entry.Id).ToArray());
+            Assert.HasCount(2, model.AvailableActorRoles);
+            Assert.HasCount(3, model.AvailableActions);
+        }
     }
 }

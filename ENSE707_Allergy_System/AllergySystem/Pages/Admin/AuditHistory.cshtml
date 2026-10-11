@@ -7,12 +7,39 @@
 <div class="admin-audit-history-page">
     <h1>Audit History</h1>
 
-    <p>View a read-only history of system audit entries. Entries are shown newest first.</p>
+    <p>Read-only audit history, newest first.</p>
+
+    <form method="get" class="row g-2 align-items-end mb-3">
+        <div class="col-sm-4">
+            <label asp-for="ActorRoleFilter" class="form-label">Actor role</label>
+            <select asp-for="ActorRoleFilter" class="form-select">
+                <option value="">All roles</option>
+                @foreach (var role in Model.AvailableActorRoles)
+                {
+                    <option value="@role">@role</option>
+                }
+            </select>
+        </div>
+        <div class="col-sm-4">
+            <label asp-for="ActionFilter" class="form-label">Action</label>
+            <select asp-for="ActionFilter" class="form-select">
+                <option value="">All actions</option>
+                @foreach (var action in Model.AvailableActions)
+                {
+                    <option value="@action">@action</option>
+                }
+            </select>
+        </div>
+        <div class="col-sm-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a asp-page="/Admin/AuditHistory" class="btn btn-outline-secondary">Clear</a>
+        </div>
+    </form>
 
     @if (Model.Entries.Count == 0)
     {
         <div class="admin-empty-state">
-            There are no audit entries recorded.
+            There are no audit entries matching these filters.
         </div>
     }
     else

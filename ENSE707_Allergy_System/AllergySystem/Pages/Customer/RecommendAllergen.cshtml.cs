@@ -9,15 +9,14 @@ namespace AllergySystem.Pages.Customer
     // It displays the approved allergen catalogue and allows customers to submit new allergen recommendations.
     public class RecommendAllergenModel : PageModel
     {
-        // Temporary customer ID used while the prototype has no authentication system.
-        private const int DemoCustomerId = 1;
-
+        private readonly CurrentUserContext _currentUser;
         private readonly AllergenCatalogService _catalogService;
         private readonly AllergenRecommendationService _recommendationService;
 
         // Creates the page model with the services needed to display allergens and submit new customer recommendations.
-        public RecommendAllergenModel(AllergenCatalogService catalogService, AllergenRecommendationService recommendationService)
+        public RecommendAllergenModel(CurrentUserContext currentUser, AllergenCatalogService catalogService, AllergenRecommendationService recommendationService)
         {
+            _currentUser = currentUser;
             _catalogService = catalogService;
             _recommendationService = recommendationService;
         }
@@ -62,7 +61,7 @@ namespace AllergySystem.Pages.Customer
 
             try
             {
-                var recommendation = _recommendationService.SubmitRecommendation(DemoCustomerId, submittedName);
+                var recommendation = _recommendationService.SubmitRecommendation(_currentUser.CustomerId, submittedName);
 
                 StatusMessage = $"Success! Recommendation #{recommendation.Id} for \"{recommendation.SuggestedName}\" was stored as Pending.";
                 IsSuccessStatus = true;

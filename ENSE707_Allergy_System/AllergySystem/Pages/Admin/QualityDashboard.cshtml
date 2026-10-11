@@ -1,0 +1,89 @@
+@page
+@model AllergySystem.Pages.Admin.QualityDashboardModel
+@{
+    ViewData["Title"] = "Quality Dashboard";
+}
+
+<div class="container mt-4">
+    <h1>Quality Dashboard</h1>
+    <p>Current order status, menu allergen coverage, and recent audit activity.</p>
+
+    <section class="mb-4" aria-labelledby="order-status-heading">
+        <h2 id="order-status-heading">Orders</h2>
+        <dl class="row mb-3">
+            <dt class="col-sm-3">Total orders</dt>
+            <dd class="col-sm-9">@Model.TotalOrderCount</dd>
+            <dt class="col-sm-3">Active orders</dt>
+            <dd class="col-sm-9">@Model.ActiveOrderCount</dd>
+        </dl>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr><th scope="col">Status</th><th scope="col">Orders</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var status in Model.OrderStatuses)
+                    {
+                        <tr>
+                            <th scope="row">@status.Status</th>
+                            <td>@status.Count</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="mb-4" aria-labelledby="catalogue-heading">
+        <h2 id="catalogue-heading">Menu Catalogue</h2>
+        <dl class="row">
+            <dt class="col-sm-3">Menu items</dt>
+            <dd class="col-sm-9">@Model.MenuItemCount</dd>
+            <dt class="col-sm-3">Ingredients</dt>
+            <dd class="col-sm-9">@Model.IngredientCount</dd>
+            <dt class="col-sm-3">Ingredients with allergens</dt>
+            <dd class="col-sm-9">@Model.IngredientsWithAllergensCount</dd>
+            <dt class="col-sm-3">Ingredient-allergen associations</dt>
+            <dd class="col-sm-9">@Model.AllergenAssociationCount</dd>
+        </dl>
+    </section>
+
+    <section aria-labelledby="recent-audit-heading">
+        <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2">
+            <h2 id="recent-audit-heading">Recent Audit Activity</h2>
+            <a asp-page="/Admin/AuditHistory">View full audit history</a>
+        </div>
+        @if (Model.RecentAuditEntries.Count == 0)
+        {
+            <p class="text-muted">No audit activity has been recorded.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Timestamp (UTC)</th>
+                            <th scope="col">Actor</th>
+                            <th scope="col">Action</th>
+                            <th scope="col">Entity</th>
+                            <th scope="col">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in Model.RecentAuditEntries)
+                        {
+                            <tr>
+                                <td>@entry.TimestampUtc.ToString("dd/MM/yyyy HH:mm 'UTC'")</td>
+                                <td>@entry.ActorRole</td>
+                                <td>@entry.Action</td>
+                                <td>@entry.EntityType @(entry.EntityId?.ToString() ?? "-")</td>
+                                <td class="text-break">@entry.Details</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>

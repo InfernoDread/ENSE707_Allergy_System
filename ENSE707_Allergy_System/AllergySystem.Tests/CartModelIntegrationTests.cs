@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using AllergySystem.Models;
 using AllergySystem.Pages.Customer;
 using AllergySystem.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AllergySystem.Tests
@@ -37,6 +39,27 @@ namespace AllergySystem.Tests
             return (orderService, orderStore, cartService, profileStore);
         }
 
+        private static CurrentUserContext CreateCustomerContext(int customerId)
+        {
+            var identity = new ClaimsIdentity(
+                new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, customerId.ToString()),
+                    new Claim(ClaimTypes.Role, PrototypeRoles.Customer)
+                },
+                "Test");
+
+            var accessor = new HttpContextAccessor
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(identity)
+                }
+            };
+
+            return new CurrentUserContext(accessor);
+        }
+
         [TestMethod]
         public void Cart_DietaryWarningWithoutConfirmation_DoesNotCreateOrderAndLeavesCartIntact()
         {
@@ -55,7 +78,7 @@ namespace AllergySystem.Tests
             // Add an item that is not labelled Vegan (Classic Cheeseburger Id = 1)
             cartSvc.AddItem(customerId, 1);
 
-            var model = new CartModel(cartSvc, orderSvc);
+            var model = new CartModel(CreateCustomerContext(customerId), cartSvc, orderSvc);
 
             model.OnPostPlaceOrder(dietaryWarningsConfirmed: false);
 
@@ -87,7 +110,7 @@ namespace AllergySystem.Tests
 
             cartSvc.AddItem(customerId, 1);
 
-            var model = new CartModel(cartSvc, orderSvc);
+            var model = new CartModel(CreateCustomerContext(customerId), cartSvc, orderSvc);
 
             model.OnPostPlaceOrder(dietaryWarningsConfirmed: true);
 
@@ -128,7 +151,7 @@ namespace AllergySystem.Tests
             };
             profileStore.SaveProfile(profile);
 
-            var model = new CartModel(cartSvc, orderSvc);
+            var model = new CartModel(CreateCustomerContext(customerId), cartSvc, orderSvc);
 
             model.OnPostPlaceOrder(dietaryWarningsConfirmed: false);
 
@@ -165,7 +188,7 @@ namespace AllergySystem.Tests
             // Add a safe menu item to the cart.
             cartSvc.AddItem(customerId, 5);
 
-            var model = new CartModel(cartSvc, orderSvc);
+            var model = new CartModel(CreateCustomerContext(customerId), cartSvc, orderSvc);
 
             model.OnPostPlaceOrder();
 
@@ -178,6 +201,22 @@ namespace AllergySystem.Tests
 
             var persisted = orderStore.GetOrdersForCustomer(customerId);
             Assert.AreEqual(1, persisted.Count);
+        }
+
+        [TestMethod]
+        public void CartModel_UsesAuthenticatedCustomerIdToIsolateCarts()
+        {
+            var (orderSvc, _, cartSvc, _) = CreateServices();
+            cartSvc.AddItem(1, 5);
+            cartSvc.AddItem(2, 1);
+
+            var model = new CartModel(CreateCustomerContext(2), cartSvc, orderSvc);
+
+            model.OnGet();
+
+            Assert.AreEqual(2, model.Cart.CustomerId);
+            Assert.AreEqual(1, model.Cart.Items.Single().MenuItem.Id);
+            Assert.AreEqual(5, cartSvc.GetCart(1).Items.Single().MenuItem.Id);
         }
     }
 }
