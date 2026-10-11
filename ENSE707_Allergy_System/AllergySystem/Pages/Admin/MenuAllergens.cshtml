@@ -1,0 +1,91 @@
+@page
+@model AllergySystem.Pages.Admin.MenuAllergensModel
+@{
+    ViewData["Title"] = "Menu Allergen Management";
+}
+
+<div class="container mt-4">
+    <h1>Menu Allergen Management</h1>
+    <p>Review allergen associations by menu item and ingredient.</p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="alert alert-success" role="status">@Model.StatusMessage</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Menu item</th>
+                    <th scope="col">Ingredient</th>
+                    <th scope="col">Current allergens</th>
+                    <th scope="col">Add association</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var menuItem in Model.MenuItems)
+                {
+                    @foreach (var ingredient in menuItem.Ingredients)
+                    {
+                        <tr>
+                            <td>@menuItem.Name</td>
+                            <td>@ingredient.Name</td>
+                            <td>
+                                @if (ingredient.Allergens.Count == 0)
+                                {
+                                    <span class="text-muted">None declared</span>
+                                }
+                                @foreach (var allergen in ingredient.Allergens)
+                                {
+                                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                        <span>@allergen.Name</span>
+                                        <form method="post" asp-page-handler="Update" class="d-flex flex-wrap gap-2">
+                                            <input type="hidden" name="menuItemId" value="@menuItem.Id" />
+                                            <input type="hidden" name="ingredientId" value="@ingredient.Id" />
+                                            <input type="hidden" name="currentAllergenId" value="@allergen.Id" />
+                                            <label class="visually-hidden" for="replacement-@menuItem.Id-@ingredient.Id-@allergen.Id">Replacement allergen for @ingredient.Name</label>
+                                            <select id="replacement-@menuItem.Id-@ingredient.Id-@allergen.Id" name="newAllergenId" class="form-select form-select-sm">
+                                                <option value="">Replace with...</option>
+                                                @foreach (var option in Model.AvailableAllergens.Where(option => option.Id != allergen.Id && ingredient.Allergens.All(existing => existing.Id != option.Id)))
+                                                {
+                                                    <option value="@option.Id">@option.Name</option>
+                                                }
+                                            </select>
+                                            <button type="submit" class="btn btn-outline-secondary btn-sm">Replace</button>
+                                        </form>
+                                        <form method="post" asp-page-handler="Remove">
+                                            <input type="hidden" name="menuItemId" value="@menuItem.Id" />
+                                            <input type="hidden" name="ingredientId" value="@ingredient.Id" />
+                                            <input type="hidden" name="allergenId" value="@allergen.Id" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                                        </form>
+                                    </div>
+                                }
+                            </td>
+                            <td>
+                                <form method="post" asp-page-handler="Add" class="d-flex flex-wrap gap-2">
+                                    <input type="hidden" name="menuItemId" value="@menuItem.Id" />
+                                    <input type="hidden" name="ingredientId" value="@ingredient.Id" />
+                                    <label class="visually-hidden" for="allergen-@menuItem.Id-@ingredient.Id">Allergen to add to @ingredient.Name</label>
+                                    <select id="allergen-@menuItem.Id-@ingredient.Id" name="allergenId" class="form-select form-select-sm">
+                                        <option value="">Select allergen</option>
+                                        @foreach (var allergen in Model.AvailableAllergens.Where(option => ingredient.Allergens.All(existing => existing.Id != option.Id)))
+                                        {
+                                            <option value="@allergen.Id">@allergen.Name</option>
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-sm">Add</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

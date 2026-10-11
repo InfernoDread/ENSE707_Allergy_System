@@ -7,11 +7,15 @@ namespace AllergySystem.Services
     public class MenuCatalogService
     {
         private readonly AllergenCatalogService _allergenCatalogService;
+        private readonly MenuAllergenMappingStore? _mappingStore;
 
         // Uses the approved allergen catalogue when assigning allergens to menu ingredients.
-        public MenuCatalogService(AllergenCatalogService allergenCatalogService)
+        public MenuCatalogService(
+            AllergenCatalogService allergenCatalogService,
+            MenuAllergenMappingStore? mappingStore = null)
         {
             _allergenCatalogService = allergenCatalogService;
+            _mappingStore = mappingStore;
         }
 
         // Returns the available menu items and their ingredients.
@@ -28,7 +32,7 @@ namespace AllergySystem.Services
                 { 4, new DietaryRestriction { Id = 4, Name = "Dairy-Free" } }
             };
 
-            return new List<MenuItem>
+            var menuItems = new List<MenuItem>
             {
                 new MenuItem
                 {
@@ -212,6 +216,21 @@ namespace AllergySystem.Services
                     }
                 }
             };
+
+            if (_mappingStore != null)
+            {
+                foreach (var ingredient in menuItems.SelectMany(item => item.Ingredients))
+                {
+                    if (_mappingStore.TryGetAllergenIds(ingredient.Id, out var allergenIds))
+                    {
+                        ingredient.Allergens = allergenIds
+                            .Select(id => allergens[id])
+                            .ToList();
+                    }
+                }
+            }
+
+            return menuItems;
         }
     }
 }

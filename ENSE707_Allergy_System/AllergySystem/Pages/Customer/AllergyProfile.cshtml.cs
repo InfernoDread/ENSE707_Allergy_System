@@ -9,17 +9,16 @@ namespace AllergySystem.Pages.Customer
     // It loads approved allergens, displays the customer's current selections, and saves any changes made to the allergy profile.
     public class AllergyProfileModel : PageModel
     {
-        // Temporary customer ID used while the prototype has no authentication system.
-        private const int DemoCustomerId = 1; 
-
+        private readonly CurrentUserContext _currentUser;
         private readonly InMemoryAllergyProfileStore _profileStore;
         private readonly AllergenCatalogService _catalogService;
         private readonly AllergyProfileService _profileService;
         private readonly DietaryRestrictionCatalogService _dietaryRestrictionCatalogService;
 
         // Creates the page model with the services required to load and update allergy profiles.
-        public AllergyProfileModel(InMemoryAllergyProfileStore profileStore, AllergenCatalogService catalogService, AllergyProfileService profileService, DietaryRestrictionCatalogService dietaryRestrictionCatalogService)
+        public AllergyProfileModel(CurrentUserContext currentUser, InMemoryAllergyProfileStore profileStore, AllergenCatalogService catalogService, AllergyProfileService profileService, DietaryRestrictionCatalogService dietaryRestrictionCatalogService)
         {
+            _currentUser = currentUser;
             _profileStore = profileStore;
             _catalogService = catalogService;
             _profileService = profileService;
@@ -53,7 +52,7 @@ namespace AllergySystem.Pages.Customer
 
             var selectedAllergens = AvailableAllergens.Where(a => SelectedAllergenIds.Contains(a.Id)).ToList();
             var selectedDietaryRestrictions = AvailableDietaryRestrictions.Where(r => SelectedDietaryRestrictionIds.Contains(r.Id)).ToList();
-            var profile = _profileStore.GetProfile(DemoCustomerId);
+            var profile = _profileStore.GetProfile(_currentUser.CustomerId);
 
             _profileService.UpdateProfile(profile, selectedAllergens);
             _profileService.UpdateDietaryRestrictions(profile, selectedDietaryRestrictions);
@@ -69,7 +68,7 @@ namespace AllergySystem.Pages.Customer
             AvailableAllergens = _catalogService.GetAllergens();
             AvailableDietaryRestrictions = _dietaryRestrictionCatalogService.GetDietaryRestrictions();
 
-            var profile = _profileStore.GetProfile(DemoCustomerId);
+            var profile = _profileStore.GetProfile(_currentUser.CustomerId);
 
             SelectedAllergenIds = profile.Allergens.Select(a => a.Id).ToList();
             SelectedDietaryRestrictionIds = profile.DietaryRestrictions.Select(r => r.Id).ToList();

@@ -9,15 +9,14 @@ namespace AllergySystem.Pages.Customer
     // It displays the current cart contents, allows items to be removed, and creates an order from the complete cart at checkout.
     public class CartModel : PageModel
     {
-        // Temporary customer ID used while the prototype has no authentication system.
-        private const int CurrentCustomerId = 1;
-
+        private readonly CurrentUserContext _currentUser;
         private readonly CartService _cartService;
         private readonly OrderService _orderService;
 
         // Creates the page model with the service needed to manage the customer's cart.
-        public CartModel(CartService cartService, OrderService orderService)
+        public CartModel(CurrentUserContext currentUser, CartService cartService, OrderService orderService)
         {
+            _currentUser = currentUser;
             _cartService = cartService;
             _orderService = orderService;
         }
@@ -42,7 +41,7 @@ namespace AllergySystem.Pages.Customer
         public IActionResult OnPostRemove(int menuItemId)
         {
             _cartService.RemoveItem(
-                CurrentCustomerId,
+                _currentUser.CustomerId,
                 menuItemId);
 
             return RedirectToPage();
@@ -51,7 +50,7 @@ namespace AllergySystem.Pages.Customer
         // Loads the cart and calculates the total quantity of items.
         private void LoadCart()
         {
-            Cart = _cartService.GetCart(CurrentCustomerId);
+            Cart = _cartService.GetCart(_currentUser.CustomerId);
 
             TotalItemCount = Cart.Items
                 .Sum(i => i.Quantity);
@@ -64,7 +63,7 @@ namespace AllergySystem.Pages.Customer
             try
             {
                 CreatedOrder = _orderService.CreateOrderFromCart(
-                    CurrentCustomerId,
+                    _currentUser.CustomerId,
                     dietaryWarningsConfirmed);
 
                 if (CreatedOrder.ConflictingAllergens.Count > 0)

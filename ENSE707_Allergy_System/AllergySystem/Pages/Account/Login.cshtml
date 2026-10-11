@@ -1,0 +1,36 @@
+@page
+@model AllergySystem.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Sign In";
+}
+
+<div class="container mt-4" style="max-width: 32rem;">
+    <h1>Sign In</h1>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+    }
+
+    <form method="post">
+        <input type="hidden" asp-for="ReturnUrl" />
+        <div class="mb-3">
+            <label asp-for="Username" class="form-label">Username</label>
+            <input asp-for="Username" class="form-control" autocomplete="username" required />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label">Password</label>
+            <input asp-for="Password" class="form-control" type="password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Sign In</button>
+    </form>
+
+    @if (Model.DemoAccountsEnabled)
+    {
+        <p class="mt-4 mb-0 text-muted">
+            Development demo accounts: customer / customer-demo,
+            customer2 / customer2-demo, foh / foh-demo, kitchen / kitchen-demo,
+            admin / admin-demo.
+        </p>
+    }
+</div>
