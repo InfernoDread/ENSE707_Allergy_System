@@ -22,13 +22,13 @@ namespace AllergySystem.Services
         public void SendToKitchen(int orderId)
         {
             _orderService.SendToKitchen(orderId);
-            _auditService.Record("FrontOfHouse", "SendToKitchen", "Order", orderId, $"Order sent to kitchen: {orderId}");
+            _auditService.Record(PrototypeRoles.FrontOfHouse, "SendToKitchen", "Order", orderId, $"Order sent to kitchen: {orderId}");
         }
 
         public void CancelOrder(int orderId)
         {
             _orderService.CancelOrder(orderId);
-            _auditService.Record("FrontOfHouse", "CancelOrder", "Order", orderId, $"Order cancelled: {orderId}");
+            _auditService.Record(PrototypeRoles.FrontOfHouse, "CancelOrder", "Order", orderId, $"Order cancelled: {orderId}");
         }
     }
 }

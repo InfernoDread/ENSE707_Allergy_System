@@ -6,13 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages(options =>
 {
-    options.Conventions.AllowAnonymousToPage("/Account/Login");
-    options.Conventions.AllowAnonymousToPage("/Account/AccessDenied");
-    options.Conventions.AuthorizePage("/Account/Logout");
-    options.Conventions.AuthorizeFolder("/Customer", PrototypeRoles.Customer);
-    options.Conventions.AuthorizePage("/Staff/FrontOfHouseOrders", PrototypeRoles.FrontOfHouse);
-    options.Conventions.AuthorizePage("/Staff/KitchenOrders", PrototypeRoles.Kitchen);
-    options.Conventions.AuthorizeFolder("/Admin", PrototypeRoles.Admin);
+    PrototypePageAuthorization.Configure(options);
 });
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

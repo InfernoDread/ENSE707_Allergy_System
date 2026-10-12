@@ -1,9 +1,12 @@
 using AllergySystem.Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace AllergySystem.Tests
 {
@@ -98,6 +101,33 @@ namespace AllergySystem.Tests
         }
 
         [TestMethod]
+        public void AuthorizationFallback_RequiresAnAuthenticatedUser()
+        {
+            var services = new ServiceCollection();
+            services.AddAuthorization(PrototypeRoles.ConfigurePolicies);
+            using var provider = services.BuildServiceProvider();
+            var fallbackPolicy = provider
+                .GetRequiredService<IOptions<AuthorizationOptions>>()
+                .Value
+                .FallbackPolicy;
+
+            Assert.IsNotNull(fallbackPolicy);
+            Assert.IsTrue(fallbackPolicy.Requirements
+                .OfType<DenyAnonymousAuthorizationRequirement>()
+                .Any());
+        }
+
+        [TestMethod]
+        public void PrototypePageAuthorization_ConfiguresCentralPageConventions()
+        {
+            var options = new RazorPagesOptions();
+
+            PrototypePageAuthorization.Configure(options);
+
+            Assert.AreEqual(10, options.Conventions.Count);
+        }
+
+        [TestMethod]
         public void CurrentUserContext_UsesAuthenticatedCustomerIdentifier()
         {
             var principal = new ClaimsPrincipal(new ClaimsIdentity(
@@ -120,13 +150,37 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void CurrentUserContext_RejectsNonCustomerIdentity()
         {
+            foreach (var role in PrototypeRoles.All.Where(role => role != PrototypeRoles.Customer))
+            {
+                var principal = new ClaimsPrincipal(new ClaimsIdentity(
+                    new[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, "2"),
+                        new Claim(ClaimTypes.Role, role)
+                    },
+                    "Test"));
+                var accessor = new HttpContextAccessor
+                {
+                    HttpContext = new DefaultHttpContext { User = principal }
+                };
+
+                var currentUser = new CurrentUserContext(accessor);
+
+                Assert.ThrowsExactly<UnauthorizedAccessException>(
+                    () => _ = currentUser.CustomerId,
+                    $"The {role} role must not be accepted as a customer.");
+            }
+        }
+
+        [TestMethod]
+        public void CurrentUserContext_RejectsUnauthenticatedCustomerRole()
+        {
             var principal = new ClaimsPrincipal(new ClaimsIdentity(
                 new[]
                 {
                     new Claim(ClaimTypes.NameIdentifier, "2"),
-                    new Claim(ClaimTypes.Role, PrototypeRoles.Admin)
-                },
-                "Test"));
+                    new Claim(ClaimTypes.Role, PrototypeRoles.Customer)
+                }));
             var accessor = new HttpContextAccessor
             {
                 HttpContext = new DefaultHttpContext { User = principal }
