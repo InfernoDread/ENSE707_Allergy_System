@@ -49,7 +49,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(1, entries.Count);
 
             var entry = entries[0];
-            Assert.AreEqual("Kitchen", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Kitchen, entry.ActorRole);
             Assert.AreEqual("AcknowledgeAllergy", entry.Action);
             Assert.AreEqual("Order", entry.EntityType);
             Assert.AreEqual(created.Id, entry.EntityId);
@@ -103,7 +103,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(before + 1, all.Count);
 
             var entry = all.First();
-            Assert.AreEqual("Kitchen", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Kitchen, entry.ActorRole);
             Assert.AreEqual("RemoveIngredient", entry.Action);
             Assert.AreEqual("Order", entry.EntityType);
             Assert.AreEqual(created.Id, entry.EntityId);
@@ -153,7 +153,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(before + 1, all.Count);
 
             var entry = all.First();
-            Assert.AreEqual("Kitchen", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Kitchen, entry.ActorRole);
             Assert.AreEqual("RemoveOrderItem", entry.Action);
             Assert.AreEqual("Order", entry.EntityType);
             Assert.AreEqual(created.Id, entry.EntityId);
@@ -195,7 +195,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(1, entries.Count);
 
             var entry = entries[0];
-            Assert.AreEqual("Kitchen", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Kitchen, entry.ActorRole);
             Assert.AreEqual("StartPreparation", entry.Action);
             Assert.AreEqual("Order", entry.EntityType);
             Assert.AreEqual(created.Id, entry.EntityId);
@@ -239,7 +239,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(before + 1, all.Count);
 
             var entry = all.First();
-            Assert.AreEqual("Kitchen", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Kitchen, entry.ActorRole);
             Assert.AreEqual("CompleteOrder", entry.Action);
             Assert.AreEqual("Order", entry.EntityType);
             Assert.AreEqual(created.Id, entry.EntityId);

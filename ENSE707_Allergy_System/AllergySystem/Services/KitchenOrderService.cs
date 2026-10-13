@@ -62,7 +62,7 @@ namespace AllergySystem.Services
 
             // Record audit only when acknowledgement actually changed state.
             _auditService.Record(
-                "Kitchen",
+                PrototypeRoles.Kitchen,
                 "AcknowledgeAllergy",
                 "Order",
                 order.Id,
@@ -115,7 +115,7 @@ namespace AllergySystem.Services
             _orderStore.SaveOrder(order);
 
             _auditService.Record(
-                "Kitchen",
+                PrototypeRoles.Kitchen,
                 "StartPreparation",
                 "Order",
                 order.Id,
@@ -154,7 +154,7 @@ namespace AllergySystem.Services
             _orderStore.SaveOrder(order);
 
             _auditService.Record(
-                "Kitchen",
+                PrototypeRoles.Kitchen,
                 "CompleteOrder",
                 "Order",
                 order.Id,
@@ -283,7 +283,7 @@ namespace AllergySystem.Services
             _orderStore.SaveOrder(order);
 
             _auditService.Record(
-                "Kitchen",
+                PrototypeRoles.Kitchen,
                 "RemoveIngredient",
                 "Order",
                 order.Id,
@@ -372,7 +372,7 @@ namespace AllergySystem.Services
             _orderStore.SaveOrder(order);
 
             _auditService.Record(
-                "Kitchen",
+                PrototypeRoles.Kitchen,
                 "RemoveOrderItem",
                 "Order",
                 order.Id,

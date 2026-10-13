@@ -45,7 +45,7 @@ namespace AllergySystem.Tests
                 auditStore.Add(new AuditEntry
                 {
                     TimestampUtc = now.AddMinutes(index),
-                    ActorRole = "Admin",
+                    ActorRole = PrototypeRoles.Admin,
                     Action = "DashboardTest",
                     EntityType = "Order",
                     EntityId = index + 1,

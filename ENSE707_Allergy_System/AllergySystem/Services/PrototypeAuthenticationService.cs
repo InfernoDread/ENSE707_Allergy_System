@@ -22,6 +22,10 @@ namespace AllergySystem.Services
 
         public static void ConfigurePolicies(AuthorizationOptions options)
         {
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+
             foreach (var role in All)
             {
                 options.AddPolicy(role, policy =>

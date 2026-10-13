@@ -26,7 +26,7 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
                         </li>
-                        @if (User.IsInRole("Customer"))
+                        @if (User.IsInRole(PrototypeRoles.Customer))
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-page="/Customer/AllergyProfile">My Allergy Profile</a>
@@ -35,19 +35,19 @@
                                 <a class="nav-link text-dark" asp-page="/Customer/Menu">Menu</a>
                             </li>
                         }
-                        @if (User.IsInRole("FrontOfHouse"))
+                        @if (User.IsInRole(PrototypeRoles.FrontOfHouse))
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-page="/Staff/FrontOfHouseOrders">Front Of House Orders</a>
                             </li>
                         }
-                        @if (User.IsInRole("Kitchen"))
+                        @if (User.IsInRole(PrototypeRoles.Kitchen))
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-page="/Staff/KitchenOrders">Kitchen Orders</a>
                             </li>
                         }
-                        @if (User.IsInRole("Admin"))
+                        @if (User.IsInRole(PrototypeRoles.Admin))
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-page="/Admin/QualityDashboard">Quality Dashboard</a>

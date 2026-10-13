@@ -63,28 +63,28 @@ namespace AllergySystem.Tests
             store.Add(new AuditEntry
             {
                 TimestampUtc = now.AddMinutes(-2),
-                ActorRole = "Admin",
+                ActorRole = PrototypeRoles.Admin,
                 Action = "UpdateIngredientAllergen",
                 EntityType = "IngredientAllergenAssociation"
             });
             store.Add(new AuditEntry
             {
                 TimestampUtc = now.AddMinutes(-1),
-                ActorRole = "Admin",
+                ActorRole = PrototypeRoles.Admin,
                 Action = "UpdateIngredientAllergen",
                 EntityType = "IngredientAllergenAssociation"
             });
             store.Add(new AuditEntry
             {
                 TimestampUtc = now,
-                ActorRole = "Kitchen",
+                ActorRole = PrototypeRoles.Kitchen,
                 Action = "StartPreparation",
                 EntityType = "Order"
             });
             store.Add(new AuditEntry
             {
                 TimestampUtc = now.AddMinutes(1),
-                ActorRole = "Admin",
+                ActorRole = PrototypeRoles.Admin,
                 Action = "LoginSucceeded",
                 EntityType = "Authentication"
             });

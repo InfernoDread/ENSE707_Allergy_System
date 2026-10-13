@@ -171,7 +171,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(1, entries.Count);
 
             var entry = entries[0];
-            Assert.AreEqual("FrontOfHouse", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.FrontOfHouse, entry.ActorRole);
             Assert.AreEqual("SendToKitchen", entry.Action);
             Assert.AreEqual("Order", entry.EntityType);
             Assert.AreEqual(created.Id, entry.EntityId);
@@ -204,7 +204,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(1, entries.Count);
 
             var entry = entries[0];
-            Assert.AreEqual("FrontOfHouse", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.FrontOfHouse, entry.ActorRole);
             Assert.AreEqual("CancelOrder", entry.Action);
             Assert.AreEqual("Order", entry.EntityType);
             Assert.AreEqual(created.Id, entry.EntityId);
