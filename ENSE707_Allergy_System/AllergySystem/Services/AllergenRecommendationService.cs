@@ -75,7 +75,7 @@ namespace AllergySystem.Services
 
             recommendation.Status = "Approved";
 
-            _auditService.Record("Administration", "ApproveAllergenRecommendation", "AllergenRecommendation", recommendationId, $"Approved allergen recommendation: {recommendation.SuggestedName}");
+            _auditService.Record(PrototypeRoles.Admin, "ApproveAllergenRecommendation", "AllergenRecommendation", recommendationId, $"Approved allergen recommendation: {recommendation.SuggestedName}");
 
             return true;
         }
@@ -93,7 +93,7 @@ namespace AllergySystem.Services
 
             recommendation.Status = "Rejected";
 
-            _auditService.Record("Administration", "RejectAllergenRecommendation", "AllergenRecommendation", recommendationId, $"Rejected allergen recommendation: {recommendation.SuggestedName}");
+            _auditService.Record(PrototypeRoles.Admin, "RejectAllergenRecommendation", "AllergenRecommendation", recommendationId, $"Rejected allergen recommendation: {recommendation.SuggestedName}");
 
             return true;
         }

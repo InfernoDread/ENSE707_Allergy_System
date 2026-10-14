@@ -54,7 +54,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(1, entries.Count);
 
             var entry = entries[0];
-            Assert.AreEqual("Administration", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Admin, entry.ActorRole);
             Assert.AreEqual("ApproveDietaryRestrictionRecommendation", entry.Action);
             Assert.AreEqual("DietaryRestrictionRecommendation", entry.EntityType);
             Assert.AreEqual(recommendation.Id, entry.EntityId);
@@ -80,7 +80,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(1, entries.Count);
 
             var entry = entries[0];
-            Assert.AreEqual("Administration", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Admin, entry.ActorRole);
             Assert.AreEqual("RejectDietaryRestrictionRecommendation", entry.Action);
             Assert.AreEqual("DietaryRestrictionRecommendation", entry.EntityType);
             Assert.AreEqual(recommendation.Id, entry.EntityId);
@@ -230,7 +230,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(1, entries.Count);
 
             var entry = entries[0];
-            Assert.AreEqual("Administration", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Admin, entry.ActorRole);
             Assert.AreEqual("ApproveAllergenRecommendation", entry.Action);
             Assert.AreEqual("AllergenRecommendation", entry.EntityType);
             Assert.AreEqual(recommendation.Id, entry.EntityId);
@@ -256,7 +256,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(1, entries.Count);
 
             var entry = entries[0];
-            Assert.AreEqual("Administration", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Admin, entry.ActorRole);
             Assert.AreEqual("RejectAllergenRecommendation", entry.Action);
             Assert.AreEqual("AllergenRecommendation", entry.EntityType);
             Assert.AreEqual(recommendation.Id, entry.EntityId);

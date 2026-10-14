@@ -63,7 +63,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(2, lettuce.Allergens.Single().Id);
 
             var entry = context.AuditStore.GetAll().Single();
-            Assert.AreEqual("Administration", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Admin, entry.ActorRole);
             Assert.AreEqual("AddIngredientAllergen", entry.Action);
             Assert.AreEqual("IngredientAllergenAssociation", entry.EntityType);
             Assert.AreEqual(4, entry.EntityId);
@@ -83,7 +83,7 @@ namespace AllergySystem.Tests
                 .Ingredients.Single(ingredient => ingredient.Id == 3);
             CollectionAssert.AreEquivalent(new[] { 2, 5 }, bun.Allergens.Select(allergen => allergen.Id).ToArray());
             var entry = context.AuditStore.GetAll().Single();
-            Assert.AreEqual("Administration", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Admin, entry.ActorRole);
             Assert.AreEqual("UpdateIngredientAllergen", entry.Action);
             StringAssert.Contains(entry.Details, "AllergenId=9");
             StringAssert.Contains(entry.Details, "ReplacementAllergenId=2");
@@ -101,7 +101,7 @@ namespace AllergySystem.Tests
                 .Ingredients.Single(ingredient => ingredient.Id == 3);
             CollectionAssert.AreEqual(new[] { 5 }, bun.Allergens.Select(allergen => allergen.Id).ToArray());
             var entry = context.AuditStore.GetAll().Single();
-            Assert.AreEqual("Administration", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Admin, entry.ActorRole);
             Assert.AreEqual("RemoveIngredientAllergen", entry.Action);
             StringAssert.Contains(entry.Details, "AllergenId=9");
         }
@@ -280,7 +280,7 @@ namespace AllergySystem.Tests
         private static void AssertRejectedAudit(TestContext context)
         {
             var entry = context.AuditStore.GetAll().Single();
-            Assert.AreEqual("Administration", entry.ActorRole);
+            Assert.AreEqual(PrototypeRoles.Admin, entry.ActorRole);
             Assert.AreEqual("RejectIngredientAllergenChange", entry.Action);
             Assert.AreEqual("IngredientAllergenAssociation", entry.EntityType);
             StringAssert.Contains(entry.Details, "AttemptedAction=");
