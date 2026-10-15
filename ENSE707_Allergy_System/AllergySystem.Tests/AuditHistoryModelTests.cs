@@ -99,6 +99,9 @@ namespace AllergySystem.Tests
 
             Assert.HasCount(2, model.Entries);
             CollectionAssert.AreEqual(new[] { 2, 1 }, model.Entries.Select(entry => entry.Id).ToArray());
+            Assert.IsTrue(model.Entries.All(entry => entry.ActorRole == PrototypeRoles.Admin));
+            Assert.IsTrue(model.AvailableActorRoles.Contains(PrototypeRoles.Admin));
+            Assert.IsFalse(model.AvailableActorRoles.Contains("Administration", StringComparer.OrdinalIgnoreCase));
             Assert.HasCount(2, model.AvailableActorRoles);
             Assert.HasCount(3, model.AvailableActions);
         }

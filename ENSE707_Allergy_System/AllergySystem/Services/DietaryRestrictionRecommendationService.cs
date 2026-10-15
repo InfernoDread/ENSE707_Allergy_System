@@ -80,7 +80,7 @@ namespace AllergySystem.Services
             _catalogService.AddDietaryRestriction(recommendation.Name);
             recommendation.Status = "Approved";
 
-            _auditService.Record("Administration", "ApproveDietaryRestrictionRecommendation", "DietaryRestrictionRecommendation", recommendationId, $"Approved dietary restriction recommendation: {recommendation.Name}");
+            _auditService.Record(PrototypeRoles.Admin, "ApproveDietaryRestrictionRecommendation", "DietaryRestrictionRecommendation", recommendationId, $"Approved dietary restriction recommendation: {recommendation.Name}");
 
             return true;
         }
@@ -107,7 +107,7 @@ namespace AllergySystem.Services
 
             recommendation.Status = "Rejected";
 
-            _auditService.Record("Administration", "RejectDietaryRestrictionRecommendation", "DietaryRestrictionRecommendation", recommendationId, $"Rejected dietary restriction recommendation: {recommendation.Name}");
+            _auditService.Record(PrototypeRoles.Admin, "RejectDietaryRestrictionRecommendation", "DietaryRestrictionRecommendation", recommendationId, $"Rejected dietary restriction recommendation: {recommendation.Name}");
 
             return true;
         }

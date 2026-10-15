@@ -12,8 +12,14 @@ dotnet test 'ENSE707_Allergy_System\AllergySystem.Tests\AllergySystem.Tests.cspr
 
 ## Result
 
-- Measurement: 14.11 ms for `OnGet` with 300 orders and 300 audit entries.
+- Latest measurement (15 October 2026): 9.66 ms for `OnGet` with 300 orders and 300 audit entries.
 - Criterion: no more than 5,000 ms.
 - Result: pass.
 
-This measures the dashboard PageModel's in-process data aggregation, not application startup, HTTP transport, or browser rendering. The browser workflow was checked separately.
+The automated timing measures the dashboard PageModel's in-process data aggregation path only. It does not measure application startup, HTTP request/response or network latency, or browser rendering.
+
+The fixture uses fresh, isolated order and audit stores; it does not modify the application's singleton demo data.
+
+## Manual browser check
+
+On 15 October 2026, signed in as Admin and loaded `/Admin/QualityDashboard` through the running application. The page rendered successfully with the order summary, menu catalogue statistics, allergen association statistics, and recent audit activity. Recent authentication records displayed the standardized actor role `Admin`.

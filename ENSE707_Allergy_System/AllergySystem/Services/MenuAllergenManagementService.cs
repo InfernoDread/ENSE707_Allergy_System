@@ -34,7 +34,7 @@ namespace AllergySystem.Services
         public void RecordUnsupportedOperation()
         {
             _auditService.Record(
-                "Administration",
+                PrototypeRoles.Admin,
                 "RejectUnsupportedMenuAllergenOperation",
                 "IngredientAllergenAssociation",
                 null,
@@ -163,7 +163,7 @@ namespace AllergySystem.Services
             }
 
             _auditService.Record(
-                "Administration",
+                PrototypeRoles.Admin,
                 action,
                 "IngredientAllergenAssociation",
                 ingredientId,
@@ -179,7 +179,7 @@ namespace AllergySystem.Services
             string reason)
         {
             _auditService.Record(
-                "Administration",
+                PrototypeRoles.Admin,
                 "RejectIngredientAllergenChange",
                 "IngredientAllergenAssociation",
                 ingredientId > 0 ? ingredientId : null,

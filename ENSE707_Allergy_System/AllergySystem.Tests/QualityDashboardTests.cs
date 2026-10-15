@@ -60,6 +60,7 @@ namespace AllergySystem.Tests
             Assert.AreEqual(6, dashboard.TotalOrderCount);
             Assert.AreEqual(4, dashboard.ActiveOrderCount);
             Assert.HasCount(6, dashboard.OrderStatuses);
+            Assert.IsTrue(dashboard.OrderStatuses.All(status => status.Count == 1));
             Assert.AreEqual(5, dashboard.MenuItemCount);
             Assert.AreEqual(16, dashboard.IngredientCount);
             Assert.AreEqual(7, dashboard.IngredientsWithAllergensCount);
@@ -67,6 +68,36 @@ namespace AllergySystem.Tests
             Assert.HasCount(10, dashboard.RecentAuditEntries);
             Assert.AreEqual(12, dashboard.RecentAuditEntries[0].Id);
             Assert.AreEqual(3, dashboard.RecentAuditEntries[^1].Id);
+            Assert.IsTrue(dashboard.RecentAuditEntries
+                .All(entry => entry.ActorRole == PrototypeRoles.Admin));
+        }
+
+        [TestMethod]
+        public void OnGet_ReflectsCurrentAllergenMappingsAndStandardAdminRole()
+        {
+            var orderStore = new InMemoryOrderStore();
+            var auditStore = new InMemoryAuditStore();
+            var mappingStore = new MenuAllergenMappingStore();
+            var allergenCatalog = new AllergenCatalogService();
+            var menuCatalog = new MenuCatalogService(allergenCatalog, mappingStore);
+            var managementService = new MenuAllergenManagementService(
+                menuCatalog,
+                allergenCatalog,
+                mappingStore,
+                new AuditService(auditStore));
+
+            managementService.AddAssociation(menuItemId: 1, ingredientId: 1, allergenId: 2);
+
+            var dashboard = new QualityDashboardModel(orderStore, menuCatalog, auditStore);
+
+            dashboard.OnGet();
+
+            Assert.AreEqual(5, dashboard.MenuItemCount);
+            Assert.AreEqual(16, dashboard.IngredientCount);
+            Assert.AreEqual(8, dashboard.IngredientsWithAllergensCount);
+            Assert.AreEqual(13, dashboard.AllergenAssociationCount);
+            Assert.AreEqual(PrototypeRoles.Admin, dashboard.RecentAuditEntries.Single().ActorRole);
+            Assert.AreEqual("AddIngredientAllergen", dashboard.RecentAuditEntries.Single().Action);
         }
 
         [TestMethod]
