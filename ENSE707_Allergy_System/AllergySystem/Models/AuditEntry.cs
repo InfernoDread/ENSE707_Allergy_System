@@ -9,6 +9,13 @@
 
         public string ActorRole { get; set; } = string.Empty;
 
+        // Stable authenticated actor identity (when available).
+        // Populated only when the current principal is authenticated.
+        public string? ActorId { get; set; }
+
+        // Human-readable username from the authenticated principal.
+        public string? ActorUsername { get; set; }
+
         public string Action { get; set; } = string.Empty;
 
         public string EntityType { get; set; } = string.Empty;

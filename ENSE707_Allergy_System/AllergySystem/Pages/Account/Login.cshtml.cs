@@ -84,6 +84,9 @@ namespace AllergySystem.Pages.Account
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8),
                     IsPersistent = false
                 });
+            // Ensure the current request's HttpContext.User reflects the newly-authenticated principal
+            // before recording the LoginSucceeded audit entry.
+            HttpContext.User = principal;
 
             _auditService.Record(
                 user.Role,

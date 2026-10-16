@@ -1,4 +1,6 @@
 ﻿using AllergySystem.Models;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 
 namespace AllergySystem.Services
 {
@@ -6,10 +8,13 @@ namespace AllergySystem.Services
     public class AuditService
     {
         private readonly InMemoryAuditStore _auditStore;
+        private readonly IHttpContextAccessor? _httpContextAccessor;
 
-        public AuditService(InMemoryAuditStore auditStore)
+        // IHttpContextAccessor is optional to preserve existing test construction.
+        public AuditService(InMemoryAuditStore auditStore, IHttpContextAccessor? httpContextAccessor = null)
         {
             _auditStore = auditStore;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         // Records an action in the system audit history.
@@ -29,6 +34,14 @@ namespace AllergySystem.Services
                 EntityId = entityId,
                 Details = details
             };
+            // Populate actor identity only when an authenticated principal is available.
+            var principal = _httpContextAccessor?.HttpContext?.User;
+            if (principal?.Identity?.IsAuthenticated == true)
+            {
+                // Use NameIdentifier as stable account id and Name (or ClaimTypes.Name) as username.
+                entry.ActorId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                entry.ActorUsername = principal.Identity?.Name ?? principal.FindFirstValue(ClaimTypes.Name);
+            }
 
             _auditStore.Add(entry);
         }
