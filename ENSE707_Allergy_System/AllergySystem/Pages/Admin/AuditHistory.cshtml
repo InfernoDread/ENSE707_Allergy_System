@@ -49,6 +49,8 @@
                 <thead>
                     <tr>
                         <th>Timestamp (UTC)</th>
+                        <th>Actor Id</th>
+                        <th>Actor Username</th>
                         <th>Actor Role</th>
                         <th>Action</th>
                         <th>Entity Type</th>
@@ -61,6 +63,8 @@
                     {
                         <tr>
                             <td>@entry.TimestampUtc.ToString("dd/MM/yyyy HH:mm 'UTC'")</td>
+                            <td>@(string.IsNullOrWhiteSpace(entry.ActorId) ? "-" : entry.ActorId)</td>
+                            <td>@(string.IsNullOrWhiteSpace(entry.ActorUsername) ? "-" : entry.ActorUsername)</td>
                             <td>@entry.ActorRole</td>
                             <td>@entry.Action</td>
                             <td>@entry.EntityType</td>

@@ -213,12 +213,20 @@
                     <strong>@Model.CreatedOrder.Status</strong>
                 </p>
 
-                <p class="mb-0">
+                <p>
                     Total ordered items:
                     <strong>
                         @Model.CreatedOrder.Items.Sum(i => i.Quantity)
                     </strong>
                 </p>
+
+                <h5>Items ordered</h5>
+                <ul class="mb-0">
+                    @foreach (var item in Model.CreatedOrder.Items)
+                    {
+                        <li>@item.MenuItem.Name — Quantity: @item.Quantity</li>
+                    }
+                </ul>
             </div>
         }
     }

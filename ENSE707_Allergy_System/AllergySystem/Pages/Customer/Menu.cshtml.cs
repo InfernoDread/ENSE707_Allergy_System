@@ -12,17 +12,20 @@ namespace AllergySystem.Pages.Customer
         private readonly CurrentUserContext _currentUser;
         private readonly MenuCatalogService _menuCatalogService;
         private readonly CartService _cartService;
+        private readonly AuditService _auditService;
 
         // Creates the page model with the services needed to load menu items
         // and add selected items to the customer's cart.
         public MenuModel(
             CurrentUserContext currentUser,
             MenuCatalogService menuCatalogService,
-            CartService cartService)
+            CartService cartService,
+            AuditService auditService)
         {
             _currentUser = currentUser;
             _menuCatalogService = menuCatalogService;
             _cartService = cartService;
+            _auditService = auditService;
         }
 
         public List<MenuItem> MenuItems { get; private set; } = new();
@@ -64,6 +67,20 @@ namespace AllergySystem.Pages.Customer
                 SelectedMenuItemId);
 
             ItemAddedToCart = Conflicts.Count == 0;
+
+            // Record a customer-scoped AllergenWarning only when the item was blocked.
+            if (Conflicts.Count > 0)
+            {
+                var conflictNames = string.Join(',', Conflicts.Select(a => $"{a.Id}:{a.Name}"));
+                var details =
+                    $"CustomerId={_currentUser.CustomerId};MenuItemId={SelectedMenuItemId};MenuItemName={SelectedMenuItem.Name};ConflictingAllergens={conflictNames};Source=AddToCart";
+                _auditService.Record(
+                    PrototypeRoles.Customer,
+                    "AllergenWarning",
+                    "MenuItem",
+                    SelectedMenuItemId,
+                    details);
+            }
 
             LoadCartCount();
         }

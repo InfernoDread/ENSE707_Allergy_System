@@ -13,7 +13,7 @@ namespace AllergySystem.Tests
     [TestClass]
     public class CartModelIntegrationTests
     {
-        private static (OrderService orderSvc, InMemoryOrderStore orderStore, CartService cartSvc, InMemoryAllergyProfileStore profileStore) CreateServices()
+        private static (OrderService orderSvc, InMemoryOrderStore orderStore, CartService cartSvc, InMemoryAllergyProfileStore profileStore, DietaryCompatibilityService dietarySvc, AuditService auditSvc, InMemoryAuditStore auditStore) CreateServices()
         {
             var orderStore = new InMemoryOrderStore();
             var cartStore = new InMemoryCartStore();
@@ -29,14 +29,19 @@ namespace AllergySystem.Tests
                 profileStore,
                 validationService);
 
+            var dietarySvc = new DietaryCompatibilityService();
+
             var orderService = new OrderService(
                 orderStore,
                 cartService,
                 profileStore,
                 validationService,
-                new DietaryCompatibilityService());
+                dietarySvc);
 
-            return (orderService, orderStore, cartService, profileStore);
+            var auditStore = new InMemoryAuditStore();
+            var auditSvc = new AuditService(auditStore);
+
+            return (orderService, orderStore, cartService, profileStore, dietarySvc, auditSvc, auditStore);
         }
 
         private static CurrentUserContext CreateCustomerContext(int customerId)
@@ -63,7 +68,7 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void Cart_DietaryWarningWithoutConfirmation_DoesNotCreateOrderAndLeavesCartIntact()
         {
-            var (orderSvc, orderStore, cartSvc, profileStore) = CreateServices();
+            var (orderSvc, orderStore, cartSvc, profileStore, dietarySvc, auditSvc, auditStore) = CreateServices();
 
             var customerId = 1;
 
@@ -78,7 +83,7 @@ namespace AllergySystem.Tests
             // Add an item that is not labelled Vegan (Classic Cheeseburger Id = 1)
             cartSvc.AddItem(customerId, 1);
 
-            var model = new CartModel(CreateCustomerContext(customerId), cartSvc, orderSvc);
+            var model = new CartModel(CreateCustomerContext(customerId), cartSvc, orderSvc, auditSvc, dietarySvc, profileStore);
 
             model.OnPostPlaceOrder(dietaryWarningsConfirmed: false);
 
@@ -96,7 +101,7 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void Cart_DietaryWarningConfirmed_CreatesPendingOrderAndClearsCart()
         {
-            var (orderSvc, orderStore, cartSvc, profileStore) = CreateServices();
+            var (orderSvc, orderStore, cartSvc, profileStore, dietarySvc, auditSvc, auditStore) = CreateServices();
 
             var customerId = 1;
 
@@ -110,7 +115,7 @@ namespace AllergySystem.Tests
 
             cartSvc.AddItem(customerId, 1);
 
-            var model = new CartModel(CreateCustomerContext(customerId), cartSvc, orderSvc);
+            var model = new CartModel(CreateCustomerContext(customerId), cartSvc, orderSvc, auditSvc, dietarySvc, profileStore);
 
             model.OnPostPlaceOrder(dietaryWarningsConfirmed: true);
 
@@ -128,7 +133,7 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void Cart_AllergyConflictTakesPrecedence_ProducesPendingAllergyConfirmationAndClearsCart()
         {
-            var (orderSvc, orderStore, cartSvc, profileStore) = CreateServices();
+            var (orderSvc, orderStore, cartSvc, profileStore, dietarySvc, auditSvc, auditStore) = CreateServices();
 
             var customerId = 1;
 
@@ -151,7 +156,7 @@ namespace AllergySystem.Tests
             };
             profileStore.SaveProfile(profile);
 
-            var model = new CartModel(CreateCustomerContext(customerId), cartSvc, orderSvc);
+            var model = new CartModel(CreateCustomerContext(customerId), cartSvc, orderSvc, auditSvc, dietarySvc, profileStore);
 
             model.OnPostPlaceOrder(dietaryWarningsConfirmed: false);
 
@@ -176,7 +181,7 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void Cart_SafeOrder_NoWarningsOrConflicts_CreatesPendingOrderAndClearsCart()
         {
-            var (orderSvc, orderStore, cartSvc, profileStore) = CreateServices();
+            var (orderSvc, orderStore, cartSvc, profileStore, dietarySvc, auditSvc, auditStore) = CreateServices();
 
             var customerId = 1;
 
@@ -188,7 +193,7 @@ namespace AllergySystem.Tests
             // Add a safe menu item to the cart.
             cartSvc.AddItem(customerId, 5);
 
-            var model = new CartModel(CreateCustomerContext(customerId), cartSvc, orderSvc);
+            var model = new CartModel(CreateCustomerContext(customerId), cartSvc, orderSvc, auditSvc, dietarySvc, profileStore);
 
             model.OnPostPlaceOrder();
 
@@ -206,11 +211,11 @@ namespace AllergySystem.Tests
         [TestMethod]
         public void CartModel_UsesAuthenticatedCustomerIdToIsolateCarts()
         {
-            var (orderSvc, _, cartSvc, _) = CreateServices();
+            var (orderSvc, _, cartSvc, profileStore, dietarySvc, auditSvc, auditStore) = CreateServices();
             cartSvc.AddItem(1, 5);
             cartSvc.AddItem(2, 1);
 
-            var model = new CartModel(CreateCustomerContext(2), cartSvc, orderSvc);
+            var model = new CartModel(CreateCustomerContext(2), cartSvc, orderSvc, auditSvc, dietarySvc, profileStore);
 
             model.OnGet();
 
