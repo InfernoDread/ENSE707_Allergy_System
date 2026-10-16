@@ -22,7 +22,6 @@ namespace AllergySystem.Pages.Admin
         public List<AllergenRecommendation> PendingRecommendations { get; private set; } = new();
         public List<DietaryRestrictionRecommendation> PendingDietaryRestrictionRecommendations { get; private set; } = new();
 
-        [TempData]
         public string? StatusMessage { get; set; }
 
         // Loads all recommendations that are currently waiting for administrator review.

@@ -26,7 +26,6 @@ namespace AllergySystem.Pages.Customer
         [BindProperty]
         public string? RequestedAllergenName { get; set; }
 
-        [TempData]
         public string? StatusMessage { get; set; }
 
         public bool IsSuccessStatus { get; private set; }
